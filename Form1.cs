@@ -6,5 +6,15 @@ namespace Kursova
         {
             InitializeComponent();
         }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+
+        }
+
+        private void CreateFileBtn_Click(object sender, EventArgs e)
+        {
+           // Program.CreateFile(textBox1.Text);
+        }
     }
 }
