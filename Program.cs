@@ -4,10 +4,12 @@ namespace Kursova
 {
     internal static class Program
     {
+        private static readonly FileStream stream = File.Create("C:\\Users\\PiwKi\\Desktop\\fs_file");
         /// <summary>
         ///  The main entry point for the application.
         /// </summary>
         [STAThread]
+
         static void Main()
         {
             // To customize application configuration such as set high DPI settings or default font,
@@ -16,7 +18,7 @@ namespace Kursova
             Application.Run(new Form1());
 
 
-            var stream = File.Create("C:\\Users\\PiwKi\\Desktop\\fs_file");
+            //var stream = File.Create("C:\\Users\\PiwKi\\Desktop\\fs_file");
             const long SectorCount = 5000;
             const long SectorSize = 512;
             const long TotalSize = SectorCount * SectorSize;
@@ -41,8 +43,6 @@ namespace Kursova
             for (var i = 0; i < RootSize; i++)//memory allocation for Root
                 stream.WriteByte(0);
 
-            CreateFile("name.txt", stream);
-
             stream.Position = DataRegionOffset;
             var firstFileOffset = DataRegionOffset;
             bw.Write(true);
@@ -57,13 +57,12 @@ namespace Kursova
             stream.Position = 0;
 
 
-            Bitmap btmp = new Bitmap((int)BitmapSize);
-            btmp.UpdateBitmap(btmp, BitmapSectors, new BinaryReader(stream), SectorCount);
+            Bitmap.UpdateBitmap(new BinaryReader(stream), (int)BitmapSectors, (int)SectorCount);
         }
 
-        public static void CreateFile(string name, FileStream stream)
+        public static FileStream GetFileStream()
         {
-            
+            return stream;
         }
     }
 }
