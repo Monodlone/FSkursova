@@ -4,6 +4,10 @@ namespace Kursova
 {
     internal class Bitmap
     {
+        //TODO: don't read whole BitArray, read only what I need
+        //Its wrong to load the whole BitArray in memory.
+        //Only load the byte i need to edit the bits in!!
+        //but this works for now...
         public static void UpdateBitmap(BinaryReader br, int bitmapSectors, int sectorCount)
         {
             BitArray bitArr = new(sectorCount);
@@ -12,24 +16,23 @@ namespace Kursova
 
             for (var i = bitmapSectors; i < sectorCount; i++)
             {
-                char[] tmp = br.ReadChars(3);
-                if (tmp[2] != 0)        //first char of file/dir name
-                    bitArr[(int)i] = true;//taken sector
+                var tmp = br.ReadChars(3);
+                if (tmp[2] != 0)    //first char of file/dir name
+                    bitArr[i] = true;//taken sector
                 else
-                    bitArr[(int)i] = false;//free sector
+                    bitArr[i] = false;//free sector
             }
 
-            BinaryWriter bw = new BinaryWriter(Program.GetFileStream());
-            WriteBitmap(bitArr, bw);
+            WriteBitmap(bitArr, new BinaryWriter(Program.GetFileStream()));
         }
 
         private static void WriteBitmap(BitArray bitArr, BinaryWriter bw)
         {
             bw.Seek(0, SeekOrigin.Begin);
-            for (int i = 0; i < bitArr.Length;)
+            for (var i = 0; i < bitArr.Length;)
             {
                 byte tmp = 0;
-                for (int j = i; j < i + 8; j++)
+                for (var j = i; j < i + 8; j++)//get a byte from 8 bool values
                     if(bitArr[j])
                         tmp |= (byte)(1 << j);
 
