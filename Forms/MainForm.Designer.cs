@@ -1,4 +1,4 @@
-﻿namespace Kursova
+﻿namespace Kursova.Forms
 {
     partial class MainForm
     {

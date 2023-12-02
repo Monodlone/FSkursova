@@ -33,13 +33,14 @@
             contentsTextbox = new TextBox();
             contentsLbl = new Label();
             createBtn = new Button();
+            label1 = new Label();
             SuspendLayout();
             // 
             // nameTextbox
             // 
             nameTextbox.Location = new Point(95, 23);
             nameTextbox.Name = "nameTextbox";
-            nameTextbox.Size = new Size(110, 23);
+            nameTextbox.Size = new Size(121, 23);
             nameTextbox.TabIndex = 0;
             // 
             // nameLbl
@@ -78,11 +79,22 @@
             createBtn.UseVisualStyleBackColor = true;
             createBtn.Click += CreateBtn_Click;
             // 
+            // label1
+            // 
+            label1.AutoSize = true;
+            label1.Font = new Font("Segoe UI", 10F);
+            label1.Location = new Point(222, 26);
+            label1.Name = "label1";
+            label1.Size = new Size(28, 19);
+            label1.TabIndex = 5;
+            label1.Text = ".txt";
+            // 
             // CreateFileForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(434, 450);
+            Controls.Add(label1);
             Controls.Add(createBtn);
             Controls.Add(contentsLbl);
             Controls.Add(contentsTextbox);
@@ -101,5 +113,6 @@
         private TextBox contentsTextbox;
         private Label contentsLbl;
         private Button createBtn;
+        private Label label1;
     }
 }

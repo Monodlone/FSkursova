@@ -2,7 +2,7 @@
 
 namespace Kursova
 {
-    internal class Bitmap
+    internal static class Bitmap
     {
         //TODO: don't read whole BitArray, read only what I need
         //Its wrong to load the whole BitArray in memory.
@@ -18,12 +18,12 @@ namespace Kursova
             br.BaseStream.Position = bitmapSectors * sectorSize + 1;
             for (var i = bitmapSectors; i < sectorCount; i++)
             {
-                var tmp = br.ReadChars(2);//TODO fix out of bounds error
+                var tmp = br.ReadChars(2);
                 if (tmp[1] != 0)    //first char of file/dir name
                     bitArr[i] = true;//taken sector
                 else
                     bitArr[i] = false;//free sector
-                br.BaseStream.Position += sectorSize - 1;
+                br.BaseStream.Position += sectorSize - 2;
             }
 
             WriteBitmap(bitArr, new BinaryWriter(Program.GetFileStream()));
@@ -31,33 +31,44 @@ namespace Kursova
 
         public static long FindFreeSector(BinaryReader br,int requiredSectors, int bitmapSectors, int sectorCount, int sectorSize)
         {
-            long offset = -1;
-            br.BaseStream.Position = bitmapSectors * sectorSize + 1;
+            //TODO not even using the bitmap ?
+            br.BaseStream.Position = 0;
+            var freeBitNum = -1;
+            for (int i = 0; i < bitmapSectors * sectorSize; i++)
+            {
+                var currByte = br.ReadByte();
+                if (currByte == 255)
+                    continue;
+                var bits = new BitArray(new byte[] { currByte });
+                
+                for (int j = 0; j < 8; j++)
+                {
+                    if(!bits[j])
+                        continue;
+                    freeBitNum = j + 1;
+                    break;
+                }
+                //scan byte for free bits
+                //number of free bit is number of free sector
+            }
+            if (freeBitNum == -1)
+                return -1;
+
+            long offset = (freeBitNum * sectorSize) + (sectorSize * bitmapSectors);
+            return offset;
+        }
+
+        private static bool FindSectorChain(BinaryReader br, long offset, int requiredSectors,int bitmapSectors, int sectorCount, int sectorSize)
+        {
+            //try to find free sectors next to one another
+            br.BaseStream.Position = offset;
+            var count = 1;
             for (var i = bitmapSectors; i < sectorCount; i++)
             {
                 var tmp = br.ReadChars(2);
                 if(tmp[1] != 0)
                     continue;
-                if (requiredSectors == 1)
-                    return br.BaseStream.Position;
-                if (requiredSectors > 1)
-                {
-                    offset = br.BaseStream.Position;
-                    var noNameYet = FindSectorChain(br, requiredSectors, bitmapSectors, sectorCount, sectorSize);
-                    return noNameYet ? offset : -1;
-                }
-            }
 
-            return offset;//-1 couldn't find a suitable offset for the file
-        }
-
-        private static bool FindSectorChain(BinaryReader br, int requiredSectors,int bitmapSectors, int sectorCount, int sectorSize)
-        {
-            //try to find free sectors next to one another
-            br.BaseStream.Position = bitmapSectors * sectorSize + 1;
-            for (var i = bitmapSectors; i < sectorCount; i++)
-            {
-                
             }
             //if there isn't any -> need to have a custom linked list >:(
             return false;

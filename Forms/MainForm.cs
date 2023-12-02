@@ -1,6 +1,4 @@
-using Kursova.Forms;
-
-namespace Kursova
+namespace Kursova.Forms
 {
     public partial class MainForm : Form
     {
@@ -18,7 +16,6 @@ namespace Kursova
         {
             var createFileForm = new CreateFileForm();
             createFileForm.ShowDialog();
-            string[] fileInfo = createFileForm.GetFileInfo();
         }
 
         private void CreateDirBtn_Click(object sender, EventArgs e)
