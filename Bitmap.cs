@@ -29,12 +29,12 @@ namespace Kursova
             WriteBitmap(bitArr, new BinaryWriter(FileSystem.GetFileStream()));
         }
 
-        public static long FindFreeSector(BinaryReader br,int requiredSectors, int bitmapSectors, int sectorCount, int sectorSize)
+        public static long FindFreeSector(BinaryReader br, int bitmapSectors, int sectorSize)
         {
             //TODO not even using the bitmap ?
             br.BaseStream.Position = 0;
             var freeBitNum = -1;
-            for (int i = 0; i < bitmapSectors * sectorSize; i++)
+            for (var i = 0; i < bitmapSectors * sectorSize; i++)
             {
                 var currByte = br.ReadByte();
                 if (currByte == 255)
@@ -58,17 +58,16 @@ namespace Kursova
             return offset;
         }
 
-        private static bool FindSectorChain(BinaryReader br, long offset, int requiredSectors,int bitmapSectors, int sectorCount, int sectorSize)
+        private static bool FindSectorChain(BinaryReader br, long offset,int bitmapSectors, int sectorCount, int sectorSize)
         {
             //try to find free sectors next to one another
             br.BaseStream.Position = offset;
-            var count = 1;
             for (var i = bitmapSectors; i < sectorCount; i++)
             {
                 var tmp = br.ReadChars(2);
                 if(tmp[1] != 0)
                     continue;
-
+                br.BaseStream.Position += sectorSize - 2;
             }
             //if there isn't any -> need to have a custom linked list >:(
             return false;

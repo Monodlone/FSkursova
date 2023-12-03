@@ -1,4 +1,3 @@
-using System.Text;
 using Kursova.Forms;
 
 namespace Kursova
@@ -14,9 +13,9 @@ namespace Kursova
             // To customize application configuration such as set high DPI settings or default font,
             // see https://aka.ms/applicationconfiguration.
             ApplicationConfiguration.Initialize();
-            Application.Run(new MainForm());
 
             FileSystem.Initiate();
+            Application.Run(new MainForm());
         }
     }
 }

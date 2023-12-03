@@ -2,8 +2,9 @@
 {
     public partial class CreateFileForm : Form
     {
-        private static string FileName { get; set; }
-        private static string FileContents { get; set; }
+        private static string? FileName { get; set; }
+        private static string? FileContents { get; set; }
+
         public CreateFileForm()
         {
             InitializeComponent();
@@ -14,12 +15,7 @@
             FileName = nameTextbox.Text;
             FileContents = contentsTextbox.Text;
             this.Close();
-        }
-
-        public static string[] GetFileInfo()
-        {
-            string[] arr = { FileName, FileContents };
-            return arr;
+            FileSystem.CreateFile(FileName, FileContents);
         }
     }
 }
