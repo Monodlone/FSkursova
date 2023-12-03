@@ -7,6 +7,17 @@ namespace Kursova.Forms
             InitializeComponent();
         }
 
+        public void UpdateTreeView(TreeNode node, TreeNode parent)
+        {
+            if (parent == null || parent.Name == "Root")
+            {
+                var rootNode = treeView.Nodes.Cast<TreeNode>().ToList().Find(n => n.Text.Equals("Root"))!;
+                rootNode.Nodes.Add(node);
+            }
+            else
+                parent.Nodes.Add(node);
+        }
+
         private void Form1_Load(object sender, EventArgs e)
         {
 
@@ -18,9 +29,5 @@ namespace Kursova.Forms
             createFileForm.ShowDialog();
         }
 
-        private void CreateDirBtn_Click(object sender, EventArgs e)
-        {
-
-        }
     }
 }

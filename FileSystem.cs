@@ -7,7 +7,6 @@ namespace Kursova
     internal static class FileSystem
     {
         //TODO LIST:
-        //TODO bitmap doesn't work when making a second file it goes in the place of the first one
         //TODO bitmap can't look for multiple sectors for big files
 
         private static readonly FileStream Stream = File.Create("C:\\Users\\PiwKi\\Desktop\\fs_file");

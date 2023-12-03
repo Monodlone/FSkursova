@@ -18,12 +18,12 @@ namespace Kursova
             br.BaseStream.Position = bitmapSectors * sectorSize + 1;
             for (var i = bitmapSectors; i < sectorCount; i++)
             {
-                var tmp = br.ReadChars(2);
-                if (tmp[1] != 0)    //first char of file/dir name
+                var tmp = br.ReadChar();//first char of file/dir name
+                if (tmp != 0)
                     bitArr[i] = true;//taken sector
                 else
                     bitArr[i] = false;//free sector
-                br.BaseStream.Position += sectorSize - 2;
+                br.BaseStream.Position += sectorSize - 1;
             }
 
             WriteBitmap(bitArr, new BinaryWriter(FileSystem.GetFileStream()));
@@ -43,18 +43,21 @@ namespace Kursova
                 
                 for (int j = 0; j < 8; j++)
                 {
-                    if(!bits[j])
+                    if(bits[j])
                         continue;
-                    freeBitNum = j + 1;
+                    freeBitNum = j;
                     break;
                 }
+
+                if (freeBitNum != -1)
+                    break;
                 //scan byte for free bits
                 //number of free bit is number of free sector
             }
             if (freeBitNum == -1)
                 return -1;
 
-            long offset = (freeBitNum * sectorSize) + (sectorSize * bitmapSectors);
+            long offset = (freeBitNum * sectorSize);// + (sectorSize * bitmapSectors);
             return offset;
         }
 

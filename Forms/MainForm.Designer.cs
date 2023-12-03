@@ -28,9 +28,10 @@
         /// </summary>
         private void InitializeComponent()
         {
+            TreeNode treeNode1 = new TreeNode("Root");
             createFileBtn = new Button();
             createDirBtn = new Button();
-            treeView1 = new TreeView();
+            treeView = new TreeView();
             editBtn = new Button();
             SuspendLayout();
             // 
@@ -52,14 +53,16 @@
             createDirBtn.TabIndex = 3;
             createDirBtn.Text = "Create dir";
             createDirBtn.UseVisualStyleBackColor = true;
-            createDirBtn.Click += CreateDirBtn_Click;
             // 
-            // treeView1
+            // treeView
             // 
-            treeView1.Location = new Point(12, 12);
-            treeView1.Name = "treeView1";
-            treeView1.Size = new Size(265, 426);
-            treeView1.TabIndex = 4;
+            treeView.Location = new Point(12, 12);
+            treeView.Name = "treeView";
+            treeNode1.Name = "rootNode";
+            treeNode1.Text = "Root";
+            treeView.Nodes.AddRange(new TreeNode[] { treeNode1 });
+            treeView.Size = new Size(265, 426);
+            treeView.TabIndex = 4;
             // 
             // editBtn
             // 
@@ -76,7 +79,7 @@
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(538, 450);
             Controls.Add(editBtn);
-            Controls.Add(treeView1);
+            Controls.Add(treeView);
             Controls.Add(createDirBtn);
             Controls.Add(createFileBtn);
             Name = "MainForm";
@@ -88,7 +91,7 @@
         #endregion
         private Button createFileBtn;
         private Button createDirBtn;
-        private TreeView treeView1;
+        private TreeView treeView;
         private Button editBtn;
     }
 }
