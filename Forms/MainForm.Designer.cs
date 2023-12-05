@@ -33,13 +33,15 @@
             createDirBtn = new Button();
             treeView = new TreeView();
             editBtn = new Button();
+            deleteBtn = new Button();
             SuspendLayout();
             // 
             // createFileBtn
             // 
+            createFileBtn.Font = new Font("Segoe UI", 10F);
             createFileBtn.Location = new Point(283, 21);
             createFileBtn.Name = "createFileBtn";
-            createFileBtn.Size = new Size(75, 23);
+            createFileBtn.Size = new Size(91, 28);
             createFileBtn.TabIndex = 1;
             createFileBtn.Text = "Create file";
             createFileBtn.UseVisualStyleBackColor = true;
@@ -47,15 +49,18 @@
             // 
             // createDirBtn
             // 
-            createDirBtn.Location = new Point(283, 50);
+            createDirBtn.Font = new Font("Segoe UI", 10F);
+            createDirBtn.Location = new Point(283, 55);
             createDirBtn.Name = "createDirBtn";
-            createDirBtn.Size = new Size(75, 23);
+            createDirBtn.Size = new Size(91, 28);
             createDirBtn.TabIndex = 3;
             createDirBtn.Text = "Create dir";
             createDirBtn.UseVisualStyleBackColor = true;
+            createDirBtn.Click += CreateDirBtn_Click;
             // 
             // treeView
             // 
+            treeView.Font = new Font("Segoe UI", 11F);
             treeView.Location = new Point(12, 12);
             treeView.Name = "treeView";
             treeNode1.Name = "rootNode";
@@ -66,24 +71,36 @@
             // 
             // editBtn
             // 
-            editBtn.Location = new Point(283, 79);
+            editBtn.Font = new Font("Segoe UI", 10F);
+            editBtn.Location = new Point(283, 89);
             editBtn.Name = "editBtn";
-            editBtn.Size = new Size(75, 23);
+            editBtn.Size = new Size(91, 28);
             editBtn.TabIndex = 5;
             editBtn.Text = "Edit";
             editBtn.UseVisualStyleBackColor = true;
+            // 
+            // deleteBtn
+            // 
+            deleteBtn.Font = new Font("Segoe UI", 10F);
+            deleteBtn.Location = new Point(283, 123);
+            deleteBtn.Name = "deleteBtn";
+            deleteBtn.Size = new Size(91, 28);
+            deleteBtn.TabIndex = 6;
+            deleteBtn.Text = "Delete";
+            deleteBtn.UseVisualStyleBackColor = true;
             // 
             // MainForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(538, 450);
+            ClientSize = new Size(414, 450);
+            Controls.Add(deleteBtn);
             Controls.Add(editBtn);
             Controls.Add(treeView);
             Controls.Add(createDirBtn);
             Controls.Add(createFileBtn);
             Name = "MainForm";
-            Text = "Form1";
+            Text = "FileSystem";
             Load += Form1_Load;
             ResumeLayout(false);
         }
@@ -93,5 +110,6 @@
         private Button createDirBtn;
         private TreeView treeView;
         private Button editBtn;
+        private Button deleteBtn;
     }
 }

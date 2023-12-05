@@ -33,12 +33,13 @@
             contentsTextbox = new TextBox();
             contentsLbl = new Label();
             createBtn = new Button();
-            label1 = new Label();
+            extensionLbl = new Label();
             SuspendLayout();
             // 
             // nameTextbox
             // 
             nameTextbox.Location = new Point(95, 23);
+            nameTextbox.MaxLength = 28;
             nameTextbox.Name = "nameTextbox";
             nameTextbox.Size = new Size(121, 23);
             nameTextbox.TabIndex = 0;
@@ -57,7 +58,8 @@
             contentsTextbox.Location = new Point(95, 64);
             contentsTextbox.Multiline = true;
             contentsTextbox.Name = "contentsTextbox";
-            contentsTextbox.Size = new Size(239, 220);
+            contentsTextbox.ScrollBars = ScrollBars.Vertical;
+            contentsTextbox.Size = new Size(249, 220);
             contentsTextbox.TabIndex = 2;
             // 
             // contentsLbl
@@ -71,37 +73,39 @@
             // 
             // createBtn
             // 
-            createBtn.Location = new Point(347, 415);
+            createBtn.Font = new Font("Segoe UI", 11F);
+            createBtn.Location = new Point(252, 310);
             createBtn.Name = "createBtn";
-            createBtn.Size = new Size(75, 23);
+            createBtn.Size = new Size(92, 35);
             createBtn.TabIndex = 4;
             createBtn.Text = "Create";
             createBtn.UseVisualStyleBackColor = true;
             createBtn.Click += CreateBtn_Click;
             // 
-            // label1
+            // extensionLbl
             // 
-            label1.AutoSize = true;
-            label1.Font = new Font("Segoe UI", 10F);
-            label1.Location = new Point(222, 26);
-            label1.Name = "label1";
-            label1.Size = new Size(28, 19);
-            label1.TabIndex = 5;
-            label1.Text = ".txt";
+            extensionLbl.AutoSize = true;
+            extensionLbl.Font = new Font("Segoe UI", 10F);
+            extensionLbl.Location = new Point(222, 26);
+            extensionLbl.Name = "extensionLbl";
+            extensionLbl.Size = new Size(28, 19);
+            extensionLbl.TabIndex = 5;
+            extensionLbl.Text = ".txt";
             // 
             // CreateFileForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(434, 450);
-            Controls.Add(label1);
+            ClientSize = new Size(356, 357);
+            Controls.Add(extensionLbl);
             Controls.Add(createBtn);
             Controls.Add(contentsLbl);
             Controls.Add(contentsTextbox);
             Controls.Add(nameLbl);
             Controls.Add(nameTextbox);
-            Name = "CreateFileForm";
+            ((Control)this).Name = "CreateFileForm";
             Text = "CreateFile";
+            Load += CreateFileForm_Load;
             ResumeLayout(false);
             PerformLayout();
         }
@@ -113,6 +117,6 @@
         private TextBox contentsTextbox;
         private Label contentsLbl;
         private Button createBtn;
-        private Label label1;
+        private Label extensionLbl;
     }
 }

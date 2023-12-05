@@ -29,7 +29,7 @@ namespace Kursova
             WriteBitmap(bitArr, new BinaryWriter(FileSystem.GetFileStream()));
         }
 
-        public static long FindFreeSector(BinaryReader br, int bitmapSectors, int sectorSize)
+        public static long FindFreeSector(BinaryReader br, int requiredSectors, int bitmapSectors, int sectorSize)
         {
             //TODO not even using the bitmap ?
             br.BaseStream.Position = 0;
@@ -39,7 +39,7 @@ namespace Kursova
                 var currByte = br.ReadByte();
                 if (currByte == 255)
                     continue;
-                var bits = new BitArray(new byte[] { currByte });
+                var bits = new BitArray(new[] { currByte });
                 
                 for (int j = 0; j < 8; j++)
                 {
