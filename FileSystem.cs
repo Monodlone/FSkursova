@@ -6,10 +6,9 @@ namespace Kursova
     internal static class FileSystem
     {
         //TODO LIST:
-        //TODO writing long file is broken line 119
+        //TODO make sure the math isn't wrong when writing at the offsets for files
         //TODO find out how much space to allocate for offsets at end of sectors (SectorCount / 255)
         //TODO when adding file or dir to CWD update it just like UpdateRoot(); have the current dir marked
-        //TODO save a big file(add addressees in the file with a special one for last sector for file)
         //TODO can't use the built-in stuff: line 10 MainForm.cs
 
         private static readonly FileStream Stream = File.Create("C:\\Users\\PiwKi\\Desktop\\fs_file");
@@ -71,6 +70,8 @@ namespace Kursova
                 Bw.Write(fileContents != null? fileContents: "");
                 
                 //write special value at end of sector
+                Stream.Position = writeOffset + 511;
+                Bw.Write((sbyte)-128);
 
                 UpdateRoot((writeOffset / SectorSize) + 1);
                 UpdateBitmap();
@@ -120,6 +121,9 @@ namespace Kursova
                 Bw.Write(writeOffsets[i + 1]);
                 Stream.Position = writeOffsets[i + 1];
             }
+            //special value for end of last sector
+            Stream.Position = writeOffsets[^1] + SectorSize - 1;//^1 points to last element. Same as writeOffsets.Length - 1
+            Bw.Write((sbyte)-128);
 
             UpdateRoot(writeOffsets[0]);
             UpdateBitmap();
