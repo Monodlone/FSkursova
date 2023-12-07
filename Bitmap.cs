@@ -29,11 +29,10 @@ namespace Kursova
             WriteBitmap(bitArr, new BinaryWriter(FileSystem.GetFileStream()));
         }
 
-        public static long FindFreeSector(BinaryReader br, int requiredSectors, int bitmapSectors, int sectorSize)
+        public static long FindFreeSector(BinaryReader br, int bitmapSectors, int sectorSize)
         {
-            //TODO not even using the bitmap ?
             br.BaseStream.Position = 0;
-            var freeBitNum = -1;
+            var writeOffset = -1;
             for (var i = 0; i < bitmapSectors * sectorSize; i++)
             {
                 var currByte = br.ReadByte();
@@ -41,39 +40,53 @@ namespace Kursova
                     continue;
                 var bits = new BitArray(new[] { currByte });
                 
-                for (int j = 0; j < 8; j++)
+                for (var j = 0; j < 8; j++)
                 {
                     if(bits[j])
                         continue;
-                    freeBitNum = j;
+                    writeOffset = j * sectorSize;
                     break;
                 }
 
-                if (freeBitNum != -1)
+                if (writeOffset != -1)
                     break;
                 //scan byte for free bits
                 //number of free bit is number of free sector
             }
-            if (freeBitNum == -1)
+            if (writeOffset == -1)
                 return -1;
 
-            long offset = (freeBitNum * sectorSize);// + (sectorSize * bitmapSectors);
-            return offset;
+            return writeOffset;
         }
 
-        private static bool FindSectorChain(BinaryReader br, long offset,int bitmapSectors, int sectorCount, int sectorSize)
+        public static long[] FindFreeSectors(BinaryReader br, int requiredSectors, int bitmapSectors, int sectorSize)
         {
-            //try to find free sectors next to one another
-            br.BaseStream.Position = offset;
-            for (var i = bitmapSectors; i < sectorCount; i++)
+            br.BaseStream.Position = 0;
+            var offsets = new long[requiredSectors];
+            var indx = 0;
+            var byteNum = 0;
+            for (var i = 0; i < bitmapSectors * sectorSize; i++)
             {
-                var tmp = br.ReadChars(2);
-                if(tmp[1] != 0)
+                var currByte = br.ReadByte();
+                byteNum++;
+                if (currByte == 255)
                     continue;
-                br.BaseStream.Position += sectorSize - 2;
+                var bits = new BitArray(new[] { currByte });
+
+                for (var j = 0; j < 8; j++)
+                {
+                    if(bits[j])
+                        continue;
+                    var sectorIndx = j + ((byteNum - 1) * 8);//eyesore
+                    offsets[indx++] = sectorSize * sectorIndx;
+                    requiredSectors--;
+                    if (requiredSectors == 0)
+                        break;
+                }
+                if (requiredSectors == 0)
+                    break;
             }
-            //if there isn't any -> need to have a custom linked list >:(
-            return false;
+            return offsets;
         }
 
         private static void WriteBitmap(BitArray bitArr, BinaryWriter bw)

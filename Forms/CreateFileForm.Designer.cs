@@ -32,7 +32,7 @@
             nameLbl = new Label();
             contentsTextbox = new TextBox();
             contentsLbl = new Label();
-            createBtn = new Button();
+            CreateBtn = new Button();
             extensionLbl = new Label();
             SuspendLayout();
             // 
@@ -71,16 +71,16 @@
             contentsLbl.TabIndex = 3;
             contentsLbl.Text = "Contents";
             // 
-            // createBtn
+            // CreateBtn
             // 
-            createBtn.Font = new Font("Segoe UI", 11F);
-            createBtn.Location = new Point(252, 310);
-            createBtn.Name = "createBtn";
-            createBtn.Size = new Size(92, 35);
-            createBtn.TabIndex = 4;
-            createBtn.Text = "Create";
-            createBtn.UseVisualStyleBackColor = true;
-            createBtn.Click += CreateBtn_Click;
+            CreateBtn.Font = new Font("Segoe UI", 11F);
+            CreateBtn.Location = new Point(252, 310);
+            CreateBtn.Name = "CreateBtn";
+            CreateBtn.Size = new Size(92, 35);
+            CreateBtn.TabIndex = 4;
+            CreateBtn.Text = "Create";
+            CreateBtn.UseVisualStyleBackColor = true;
+            CreateBtn.Click += CreateBtn_Click;
             // 
             // extensionLbl
             // 
@@ -98,12 +98,12 @@
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(356, 357);
             Controls.Add(extensionLbl);
-            Controls.Add(createBtn);
+            Controls.Add(CreateBtn);
             Controls.Add(contentsLbl);
             Controls.Add(contentsTextbox);
             Controls.Add(nameLbl);
             Controls.Add(nameTextbox);
-            ((Control)this).Name = "CreateFileForm";
+            Name = "CreateFileForm";
             Text = "CreateFile";
             Load += CreateFileForm_Load;
             ResumeLayout(false);
@@ -116,7 +116,7 @@
         private Label nameLbl;
         private TextBox contentsTextbox;
         private Label contentsLbl;
-        private Button createBtn;
+        private Button CreateBtn;
         private Label extensionLbl;
     }
 }

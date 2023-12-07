@@ -6,8 +6,10 @@ namespace Kursova
     internal static class FileSystem
     {
         //TODO LIST:
-        //TODO when adding file or new dir to current dir update it just like root
-        //TODO bitmap can't look for multiple sectors for big files (linked list / offsets at end of sector)
+        //TODO writing long file is broken line 119
+        //TODO find out how much space to allocate for offsets at end of sectors (SectorCount / 255)
+        //TODO when adding file or dir to CWD update it just like UpdateRoot(); have the current dir marked
+        //TODO save a big file(add addressees in the file with a special one for last sector for file)
         //TODO can't use the built-in stuff: line 10 MainForm.cs
 
         private static readonly FileStream Stream = File.Create("C:\\Users\\PiwKi\\Desktop\\fs_file");
@@ -41,10 +43,11 @@ namespace Kursova
 
         public static void CreateFile(string? fileName, string fileContents)
         {
-            if(fileName == null) return;
+            if (fileName == null) return;
             //1 find free sector using bitmap
             //2 change stream position to the free sector
             //3 write file name and contents using Bw
+            //3.1 at end of sector write address of next sector of contents or special value if no next
             //4 save file offset to Root
             //5 update the bitmap
             long fileSize = fileName.Length + fileContents.Length;
@@ -54,28 +57,34 @@ namespace Kursova
                 requiredSectors++;
                 fileSize -= SectorSize;
             }
-            var writeOffset = Bitmap.FindFreeSector(Br, requiredSectors, (int)BitmapSectors, (int)SectorSize);
 
-            Stream.Position = writeOffset;
-            Bw.Write(true);
-            Bw.Write(fileName + ".txt");
+            if (requiredSectors > 1)
+                WriteLongFile(fileName, fileContents, requiredSectors);
+            else
+            {
+                var writeOffset = Bitmap.FindFreeSector(Br, (int)BitmapSectors, (int)SectorSize);
 
-            Stream.Position = writeOffset + fileName.Length + 6;
-            Bw.Write(fileContents != null? fileContents: "");
+                Stream.Position = writeOffset;
+                Bw.Write(true);
+                Bw.Write(fileName + ".txt");
 
-            UpdateRoot((writeOffset / SectorSize) + 1);
-            UpdateBitmap();
-            
+                Bw.Write(fileContents != null? fileContents: "");
+                
+                //write special value at end of sector
+
+                UpdateRoot((writeOffset / SectorSize) + 1);
+                UpdateBitmap();
+            }
         }
 
         public static void CreateDirectory(string? dirName)
         {
-            if(dirName == null) return;
+            if (dirName == null) return;
             //find free sector
             //change stream position to it
             //write true byte and dir name
             //update the bitmap
-            var writeOffset = Bitmap.FindFreeSector(Br, 1, (int)BitmapSectors, (int)SectorSize);
+            var writeOffset = Bitmap.FindFreeSector(Br, (int)BitmapSectors, (int)SectorSize);
             Stream.Position = writeOffset;
             Bw.Write(false);
             Bw.Write(dirName);
@@ -90,6 +99,51 @@ namespace Kursova
         {
             Stream.Position = 0;
             Bitmap.UpdateBitmap(new BinaryReader(Stream), (int)SectorSize, (int)BitmapSectors, (int)SectorCount);
+        }
+
+        private static void WriteLongFile(string? fileName, string fileContents, int requiredSectors)
+        {
+            if (fileName == null) return;
+
+            var writeOffsets = Bitmap.FindFreeSectors(Br, requiredSectors, (int)BitmapSectors, (int)SectorSize);
+            var strings = SplitString(fileContents, fileName.Length + 5, requiredSectors);
+            Stream.Position = writeOffsets[0];
+            Bw.Write(true);
+            Bw.Write(fileName + ".txt");
+
+            //doesn't write the last part of the strings[i] to the file
+            for (var i = 0; i < requiredSectors; i++)
+            {
+                Bw.Write(strings[i]);
+                if (i >= writeOffsets.Length - 1) 
+                    continue;
+                Bw.Write(writeOffsets[i + 1]);
+                Stream.Position = writeOffsets[i + 1];
+            }
+
+            UpdateRoot(writeOffsets[0]);
+            UpdateBitmap();
+        }
+
+        private static string[] SplitString(string str, int nameSize, int requiredSectors)
+        {
+            var strs = new string[requiredSectors];
+            var firstPart = "";
+            var indx = 0;
+            int i;
+            for (i = 0; i < SectorSize - nameSize - 2; i++)
+                firstPart += str[i];
+            strs[indx++] = firstPart;
+
+            var counter = 0;
+            for (; i < str.Length; i++)
+            {
+                strs[indx] += str[i];
+                counter++;
+                if (counter == 511)
+                    indx++;
+            }
+            return strs;
         }
 
         private static void UpdateRoot(long fileOffset)

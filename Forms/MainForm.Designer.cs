@@ -28,77 +28,101 @@
         /// </summary>
         private void InitializeComponent()
         {
-            TreeNode treeNode1 = new TreeNode("Root");
-            createFileBtn = new Button();
-            createDirBtn = new Button();
+            TreeNode treeNode2 = new TreeNode("Root");
+            CreateFileBtn = new Button();
+            CreateDirBtn = new Button();
             treeView = new TreeView();
-            editBtn = new Button();
-            deleteBtn = new Button();
+            EditBtn = new Button();
+            DeleteBtn = new Button();
+            ImportBtn = new Button();
+            ExportBtn = new Button();
             SuspendLayout();
             // 
-            // createFileBtn
+            // CreateFileBtn
             // 
-            createFileBtn.Font = new Font("Segoe UI", 10F);
-            createFileBtn.Location = new Point(283, 21);
-            createFileBtn.Name = "createFileBtn";
-            createFileBtn.Size = new Size(91, 28);
-            createFileBtn.TabIndex = 1;
-            createFileBtn.Text = "Create file";
-            createFileBtn.UseVisualStyleBackColor = true;
-            createFileBtn.Click += CreateFileBtn_Click;
+            CreateFileBtn.Font = new Font("Segoe UI", 10F);
+            CreateFileBtn.Location = new Point(283, 21);
+            CreateFileBtn.Name = "CreateFileBtn";
+            CreateFileBtn.Size = new Size(91, 28);
+            CreateFileBtn.TabIndex = 1;
+            CreateFileBtn.Text = "Create file";
+            CreateFileBtn.UseVisualStyleBackColor = true;
+            CreateFileBtn.Click += CreateFileBtn_Click;
             // 
-            // createDirBtn
+            // CreateDirBtn
             // 
-            createDirBtn.Font = new Font("Segoe UI", 10F);
-            createDirBtn.Location = new Point(283, 55);
-            createDirBtn.Name = "createDirBtn";
-            createDirBtn.Size = new Size(91, 28);
-            createDirBtn.TabIndex = 3;
-            createDirBtn.Text = "Create dir";
-            createDirBtn.UseVisualStyleBackColor = true;
-            createDirBtn.Click += CreateDirBtn_Click;
+            CreateDirBtn.Font = new Font("Segoe UI", 10F);
+            CreateDirBtn.Location = new Point(283, 55);
+            CreateDirBtn.Name = "CreateDirBtn";
+            CreateDirBtn.Size = new Size(91, 28);
+            CreateDirBtn.TabIndex = 3;
+            CreateDirBtn.Text = "Create dir";
+            CreateDirBtn.UseVisualStyleBackColor = true;
+            CreateDirBtn.Click += CreateDirBtn_Click;
             // 
             // treeView
             // 
             treeView.Font = new Font("Segoe UI", 11F);
             treeView.Location = new Point(12, 12);
             treeView.Name = "treeView";
-            treeNode1.Name = "rootNode";
-            treeNode1.Text = "Root";
-            treeView.Nodes.AddRange(new TreeNode[] { treeNode1 });
+            treeNode2.Name = "rootNode";
+            treeNode2.Text = "Root";
+            treeView.Nodes.AddRange(new TreeNode[] { treeNode2 });
             treeView.Size = new Size(265, 426);
             treeView.TabIndex = 4;
             // 
-            // editBtn
+            // EditBtn
             // 
-            editBtn.Font = new Font("Segoe UI", 10F);
-            editBtn.Location = new Point(283, 89);
-            editBtn.Name = "editBtn";
-            editBtn.Size = new Size(91, 28);
-            editBtn.TabIndex = 5;
-            editBtn.Text = "Edit";
-            editBtn.UseVisualStyleBackColor = true;
+            EditBtn.Font = new Font("Segoe UI", 10F);
+            EditBtn.Location = new Point(283, 89);
+            EditBtn.Name = "EditBtn";
+            EditBtn.Size = new Size(91, 28);
+            EditBtn.TabIndex = 5;
+            EditBtn.Text = "Edit";
+            EditBtn.UseVisualStyleBackColor = true;
             // 
-            // deleteBtn
+            // DeleteBtn
             // 
-            deleteBtn.Font = new Font("Segoe UI", 10F);
-            deleteBtn.Location = new Point(283, 123);
-            deleteBtn.Name = "deleteBtn";
-            deleteBtn.Size = new Size(91, 28);
-            deleteBtn.TabIndex = 6;
-            deleteBtn.Text = "Delete";
-            deleteBtn.UseVisualStyleBackColor = true;
+            DeleteBtn.Font = new Font("Segoe UI", 10F);
+            DeleteBtn.Location = new Point(283, 191);
+            DeleteBtn.Name = "DeleteBtn";
+            DeleteBtn.Size = new Size(91, 28);
+            DeleteBtn.TabIndex = 6;
+            DeleteBtn.Text = "Delete";
+            DeleteBtn.UseVisualStyleBackColor = true;
+            // 
+            // ImportBtn
+            // 
+            ImportBtn.Font = new Font("Segoe UI", 10F);
+            ImportBtn.Location = new Point(283, 123);
+            ImportBtn.Name = "ImportBtn";
+            ImportBtn.Size = new Size(91, 28);
+            ImportBtn.TabIndex = 7;
+            ImportBtn.Text = "Import";
+            ImportBtn.UseVisualStyleBackColor = true;
+            // 
+            // ExportBtn
+            // 
+            ExportBtn.Font = new Font("Segoe UI", 10F);
+            ExportBtn.Location = new Point(283, 157);
+            ExportBtn.Name = "ExportBtn";
+            ExportBtn.Size = new Size(91, 28);
+            ExportBtn.TabIndex = 8;
+            ExportBtn.Text = "Export";
+            ExportBtn.UseVisualStyleBackColor = true;
             // 
             // MainForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(414, 450);
-            Controls.Add(deleteBtn);
-            Controls.Add(editBtn);
+            Controls.Add(ExportBtn);
+            Controls.Add(ImportBtn);
+            Controls.Add(DeleteBtn);
+            Controls.Add(EditBtn);
             Controls.Add(treeView);
-            Controls.Add(createDirBtn);
-            Controls.Add(createFileBtn);
+            Controls.Add(CreateDirBtn);
+            Controls.Add(CreateFileBtn);
             Name = "MainForm";
             Text = "FileSystem";
             Load += Form1_Load;
@@ -106,10 +130,12 @@
         }
 
         #endregion
-        private Button createFileBtn;
-        private Button createDirBtn;
+        private Button CreateFileBtn;
+        private Button CreateDirBtn;
         private TreeView treeView;
-        private Button editBtn;
-        private Button deleteBtn;
+        private Button EditBtn;
+        private Button DeleteBtn;
+        private Button ImportBtn;
+        private Button ExportBtn;
     }
 }
