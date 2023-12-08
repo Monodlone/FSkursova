@@ -9,7 +9,6 @@ namespace Kursova
         //TODO have a way to keep track of CWD
         //TODO make the treeview stuff for other directories
         //TODO make sure the math isn't wrong when writing at the offsets for files
-        //TODO find out how much space to allocate for offsets at end of sectors (SectorCount / 255)
 
         private static readonly FileStream Stream = File.Create("C:\\Users\\PiwKi\\Desktop\\fs_file");
         private static readonly BinaryWriter Bw = new(Stream, Encoding.UTF8, true);
@@ -22,6 +21,8 @@ namespace Kursova
         private const long SectorSize = 512;
         private const long TotalSize = SectorCount * SectorSize;
         private const long BitmapSize = SectorCount / 8;
+
+        private static long _currObjOffset;
 
         public static void Initiate()
         {
@@ -126,7 +127,7 @@ namespace Kursova
             }
             //special value for end of last sector
             Stream.Position = writeOffsets[^1] + SectorSize - 2;//^1 points to last element
-            Bw.Write((sbyte)-128);
+            Bw.Write((long)-1);
 
             UpdateRoot(writeOffsets[0]);
             UpdateBitmap();
@@ -156,7 +157,7 @@ namespace Kursova
         private static void UpdateRoot(long fileOffset)
         {
             Stream.Position = (RootOffset * SectorSize) + _rootFileAddressOffset + 5;
-            Bw.Write((byte)fileOffset);
+            Bw.Write(fileOffset);
             _rootFileAddressOffset++;
         }
     }

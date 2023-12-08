@@ -2,22 +2,14 @@ namespace Kursova.Forms
 {
     public partial class MainForm : Form
     {
-        private static readonly TreeNode RootNode = new ("Root");
+        private static readonly TreeNode RootNode = new("Root");
 
-        public MainForm()
-        {
-            InitializeComponent();
-            treeView.Nodes.Add(RootNode);
-            RootNode.ForeColor = Color.Red;
-        }
+        public MainForm() => InitializeComponent();
 
         public static void AddTreeviewNodes(string name, bool isFile)
         {
             //create node from file name
-            var node = new TreeNode(name)
-            {
-                ForeColor = isFile ? Color.Green : Color.Red
-            };
+            var node = new TreeNode(name) { ForeColor = isFile ? Color.Green : Color.Red };
             //find parent of file
             //add to correct parent in treeview
             RootNode.Nodes.Add(node);
@@ -25,7 +17,8 @@ namespace Kursova.Forms
 
         private void MainForm_Load(object sender, EventArgs e)
         {
-
+            treeView.Nodes.Add(RootNode);
+            RootNode.ForeColor = Color.Red;
         }
 
         private void CreateFileBtn_Click(object sender, EventArgs e)
@@ -38,6 +31,11 @@ namespace Kursova.Forms
         {
             var createFileForm = new CreateFileForm(false);
             createFileForm.ShowDialog();
+        }
+
+        private void treeView_AfterSelect(object sender, TreeViewEventArgs e)
+        {
+
         }
     }
 }

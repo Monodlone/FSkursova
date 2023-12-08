@@ -66,6 +66,7 @@
             treeView.Name = "treeView";
             treeView.Size = new Size(265, 426);
             treeView.TabIndex = 4;
+            treeView.AfterSelect += treeView_AfterSelect;
             // 
             // EditBtn
             // 
