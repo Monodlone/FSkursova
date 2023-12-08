@@ -2,25 +2,28 @@ namespace Kursova.Forms
 {
     public partial class MainForm : Form
     {
+        private static readonly TreeNode RootNode = new ("Root");
+
         public MainForm()
         {
             InitializeComponent();
+            treeView.Nodes.Add(RootNode);
+            RootNode.ForeColor = Color.Red;
         }
 
-        public void UpdateTreeView(TreeNode node, TreeNode parent)
+        public static void AddTreeviewNodes(string name, bool isFile)
         {
-            //get parent node name
-            //make treeNode from the name
-            if (parent == null || parent.Name == "Root")
+            //create node from file name
+            var node = new TreeNode(name)
             {
-                var rootNode = treeView.Nodes.Cast<TreeNode>().ToList().Find(n => n.Text.Equals("Root"))!;
-                rootNode.Nodes.Add(node);
-            }
-            else
-                parent.Nodes.Add(node);
+                ForeColor = isFile ? Color.Green : Color.Red
+            };
+            //find parent of file
+            //add to correct parent in treeview
+            RootNode.Nodes.Add(node);
         }
 
-        private void Form1_Load(object sender, EventArgs e)
+        private void MainForm_Load(object sender, EventArgs e)
         {
 
         }

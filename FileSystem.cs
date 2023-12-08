@@ -1,22 +1,22 @@
 ﻿using System.Text;
+using Kursova.Forms;
 
 namespace Kursova
 {
-
     internal static class FileSystem
     {
         //TODO LIST:
+        //TODO have a way to keep track of CWD
+        //TODO make the treeview stuff for other directories
         //TODO make sure the math isn't wrong when writing at the offsets for files
         //TODO find out how much space to allocate for offsets at end of sectors (SectorCount / 255)
-        //TODO when adding file or dir to CWD update it just like UpdateRoot(); have the current dir marked
-        //TODO can't use the built-in stuff: line 10 MainForm.cs
 
         private static readonly FileStream Stream = File.Create("C:\\Users\\PiwKi\\Desktop\\fs_file");
         private static readonly BinaryWriter Bw = new(Stream, Encoding.UTF8, true);
         private static readonly BinaryReader Br = new(Stream, Encoding.UTF8, true);
         private static long BitmapSectors { get; set; } = 1;
         private static long RootOffset { get; set; }
-        private static int _rootFileAddressOffset = 0;
+        private static int _rootFileAddressOffset;
 
         private const long SectorCount = 5120;
         private const long SectorSize = 512;
@@ -70,12 +70,14 @@ namespace Kursova
                 Bw.Write(fileContents != null? fileContents: "");
                 
                 //write special value at end of sector
-                Stream.Position = writeOffset + 511;
+                Stream.Position = writeOffset + SectorSize - 2;
                 Bw.Write((sbyte)-128);
 
                 UpdateRoot((writeOffset / SectorSize) + 1);
                 UpdateBitmap();
             }
+
+            MainForm.AddTreeviewNodes(fileName, true);
         }
 
         public static void CreateDirectory(string? dirName)
@@ -92,6 +94,8 @@ namespace Kursova
 
             UpdateRoot((writeOffset / SectorSize) + 1);
             UpdateBitmap();
+
+            MainForm.AddTreeviewNodes(dirName, false);
         }
 
         public static FileStream GetFileStream() => Stream;
@@ -112,7 +116,6 @@ namespace Kursova
             Bw.Write(true);
             Bw.Write(fileName + ".txt");
 
-            //doesn't write the last part of the strings[i] to the file
             for (var i = 0; i < requiredSectors; i++)
             {
                 Bw.Write(strings[i]);
@@ -122,7 +125,7 @@ namespace Kursova
                 Stream.Position = writeOffsets[i + 1];
             }
             //special value for end of last sector
-            Stream.Position = writeOffsets[^1] + SectorSize - 1;//^1 points to last element. Same as writeOffsets.Length - 1
+            Stream.Position = writeOffsets[^1] + SectorSize - 2;//^1 points to last element
             Bw.Write((sbyte)-128);
 
             UpdateRoot(writeOffsets[0]);

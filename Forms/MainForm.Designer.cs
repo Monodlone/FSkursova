@@ -28,7 +28,6 @@
         /// </summary>
         private void InitializeComponent()
         {
-            TreeNode treeNode2 = new TreeNode("Root");
             CreateFileBtn = new Button();
             CreateDirBtn = new Button();
             treeView = new TreeView();
@@ -65,9 +64,6 @@
             treeView.Font = new Font("Segoe UI", 11F);
             treeView.Location = new Point(12, 12);
             treeView.Name = "treeView";
-            treeNode2.Name = "rootNode";
-            treeNode2.Text = "Root";
-            treeView.Nodes.AddRange(new TreeNode[] { treeNode2 });
             treeView.Size = new Size(265, 426);
             treeView.TabIndex = 4;
             // 
@@ -125,7 +121,7 @@
             Controls.Add(CreateFileBtn);
             Name = "MainForm";
             Text = "FileSystem";
-            Load += Form1_Load;
+            Load += MainForm_Load;
             ResumeLayout(false);
         }
 

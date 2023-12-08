@@ -56,7 +56,7 @@ namespace Kursova
             if (writeOffset == -1)
                 return -1;
 
-            return writeOffset;
+            return writeOffset + 1;
         }
 
         public static long[] FindFreeSectors(BinaryReader br, int requiredSectors, int bitmapSectors, int sectorSize)
@@ -78,7 +78,7 @@ namespace Kursova
                     if(bits[j])
                         continue;
                     var sectorIndx = j + ((byteNum - 1) * 8);//eyesore
-                    offsets[indx++] = sectorSize * sectorIndx;
+                    offsets[indx++] = sectorSize * sectorIndx + 1;
                     requiredSectors--;
                     if (requiredSectors == 0)
                         break;

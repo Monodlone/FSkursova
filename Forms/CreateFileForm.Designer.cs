@@ -49,9 +49,9 @@
             nameLbl.AutoSize = true;
             nameLbl.Location = new Point(28, 26);
             nameLbl.Name = "nameLbl";
-            nameLbl.Size = new Size(39, 15);
+            nameLbl.Size = new Size(57, 15);
             nameLbl.TabIndex = 1;
-            nameLbl.Text = "Name";
+            nameLbl.Text = "FileName";
             // 
             // contentsTextbox
             // 
@@ -104,7 +104,7 @@
             Controls.Add(nameLbl);
             Controls.Add(nameTextbox);
             Name = "CreateFileForm";
-            Text = "CreateFile";
+            Text = "Create";
             Load += CreateFileForm_Load;
             ResumeLayout(false);
             PerformLayout();

@@ -2,7 +2,7 @@
 {
     public partial class CreateFileForm : Form
     {
-        private static string? Name { get; set; }
+        private static string? FileName { get; set; }
         private static string? FileContents { get; set; }
         private static bool IsFile { get; set; }
 
@@ -14,13 +14,13 @@
 
         private void CreateBtn_Click(object sender, EventArgs e)
         {
-            Name = nameTextbox.Text;
+            FileName = nameTextbox.Text;
             FileContents = contentsTextbox.Text;
             this.Close();
             if(IsFile)
-                FileSystem.CreateFile(Name, FileContents);
+                FileSystem.CreateFile(FileName, FileContents);
             else
-                FileSystem.CreateDirectory(Name);
+                FileSystem.CreateDirectory(FileName);
         }
 
         private void CreateFileForm_Load(object sender, EventArgs e)
