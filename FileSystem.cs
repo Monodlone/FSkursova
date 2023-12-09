@@ -6,8 +6,7 @@ namespace Kursova
     internal static class FileSystem
     {
         //TODO LIST:
-        //TODO have a way to keep track of CWD
-        //TODO finish the treeview stuff
+        //TODO view file contents
 
         private static readonly FileStream Stream = File.Create("C:\\Users\\PiwKi\\Desktop\\fs_file");
         private static readonly BinaryWriter Bw = new(Stream, Encoding.UTF8, true);
@@ -97,6 +96,8 @@ namespace Kursova
         }
 
         public static FileStream GetFileStream() => Stream;
+
+        public static long GetRootOffset() => RootOffset;
 
         private static void UpdateBitmap()
         {
