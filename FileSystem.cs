@@ -7,8 +7,7 @@ namespace Kursova
     {
         //TODO LIST:
         //TODO have a way to keep track of CWD
-        //TODO make the treeview stuff for other directories
-        //TODO make sure the math isn't wrong when writing at the offsets for files
+        //TODO finish the treeview stuff
 
         private static readonly FileStream Stream = File.Create("C:\\Users\\PiwKi\\Desktop\\fs_file");
         private static readonly BinaryWriter Bw = new(Stream, Encoding.UTF8, true);
@@ -21,8 +20,6 @@ namespace Kursova
         private const long SectorSize = 512;
         private const long TotalSize = SectorCount * SectorSize;
         private const long BitmapSize = SectorCount / 8;
-
-        private static long _currObjOffset;
 
         public static void Initiate()
         {
@@ -76,9 +73,9 @@ namespace Kursova
 
                 UpdateRoot((writeOffset / SectorSize) + 1);
                 UpdateBitmap();
+                MainForm.AddTreeviewNodes(fileName, writeOffset, true);
             }
 
-            MainForm.AddTreeviewNodes(fileName, true);
         }
 
         public static void CreateDirectory(string? dirName)
@@ -96,7 +93,7 @@ namespace Kursova
             UpdateRoot((writeOffset / SectorSize) + 1);
             UpdateBitmap();
 
-            MainForm.AddTreeviewNodes(dirName, false);
+            MainForm.AddTreeviewNodes(dirName, writeOffset, false);
         }
 
         public static FileStream GetFileStream() => Stream;
@@ -131,6 +128,7 @@ namespace Kursova
 
             UpdateRoot(writeOffsets[0]);
             UpdateBitmap();
+            MainForm.AddTreeviewNodes(fileName, writeOffsets[0], true);
         }
 
         private static string[] SplitString(string str, int nameSize, int requiredSectors)

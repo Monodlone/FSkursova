@@ -6,10 +6,11 @@ namespace Kursova.Forms
 
         public MainForm() => InitializeComponent();
 
-        public static void AddTreeviewNodes(string name, bool isFile)
+        public static void AddTreeviewNodes(string name, long offset, bool isFile)
         {
             //create node from file name
-            var node = new TreeNode(name) { ForeColor = isFile ? Color.Green : Color.Red };
+            var node = new TreeNode(name) { ForeColor = isFile ? Color.Green : Color.Red, Tag = offset };
+            //node.Tag = offset;
             //find parent of file
             //add to correct parent in treeview
             RootNode.Nodes.Add(node);
