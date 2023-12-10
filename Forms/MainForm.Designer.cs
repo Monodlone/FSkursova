@@ -35,6 +35,7 @@
             DeleteBtn = new Button();
             ImportBtn = new Button();
             ExportBtn = new Button();
+            ViewBtn = new Button();
             SuspendLayout();
             // 
             // CreateFileBtn
@@ -71,17 +72,18 @@
             // EditBtn
             // 
             EditBtn.Font = new Font("Segoe UI", 10F);
-            EditBtn.Location = new Point(283, 89);
+            EditBtn.Location = new Point(283, 123);
             EditBtn.Name = "EditBtn";
             EditBtn.Size = new Size(91, 28);
             EditBtn.TabIndex = 5;
             EditBtn.Text = "Edit";
             EditBtn.UseVisualStyleBackColor = true;
+            EditBtn.Click += EditBtn_Click;
             // 
             // DeleteBtn
             // 
             DeleteBtn.Font = new Font("Segoe UI", 10F);
-            DeleteBtn.Location = new Point(283, 191);
+            DeleteBtn.Location = new Point(283, 225);
             DeleteBtn.Name = "DeleteBtn";
             DeleteBtn.Size = new Size(91, 28);
             DeleteBtn.TabIndex = 6;
@@ -91,7 +93,7 @@
             // ImportBtn
             // 
             ImportBtn.Font = new Font("Segoe UI", 10F);
-            ImportBtn.Location = new Point(283, 123);
+            ImportBtn.Location = new Point(283, 157);
             ImportBtn.Name = "ImportBtn";
             ImportBtn.Size = new Size(91, 28);
             ImportBtn.TabIndex = 7;
@@ -101,18 +103,30 @@
             // ExportBtn
             // 
             ExportBtn.Font = new Font("Segoe UI", 10F);
-            ExportBtn.Location = new Point(283, 157);
+            ExportBtn.Location = new Point(283, 191);
             ExportBtn.Name = "ExportBtn";
             ExportBtn.Size = new Size(91, 28);
             ExportBtn.TabIndex = 8;
             ExportBtn.Text = "Export";
             ExportBtn.UseVisualStyleBackColor = true;
             // 
+            // ViewBtn
+            // 
+            ViewBtn.Font = new Font("Segoe UI", 10F);
+            ViewBtn.Location = new Point(283, 89);
+            ViewBtn.Name = "ViewBtn";
+            ViewBtn.Size = new Size(91, 28);
+            ViewBtn.TabIndex = 9;
+            ViewBtn.Text = "View";
+            ViewBtn.UseVisualStyleBackColor = true;
+            ViewBtn.Click += ViewBtn_Click;
+            // 
             // MainForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(414, 450);
+            Controls.Add(ViewBtn);
             Controls.Add(ExportBtn);
             Controls.Add(ImportBtn);
             Controls.Add(DeleteBtn);
@@ -134,5 +148,6 @@
         private Button DeleteBtn;
         private Button ImportBtn;
         private Button ExportBtn;
+        private Button ViewBtn;
     }
 }

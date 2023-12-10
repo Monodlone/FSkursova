@@ -6,7 +6,7 @@ namespace Kursova
     {
         //TODO: don't read whole BitArray, read only what I need
         //Its wrong to load the whole BitArray in memory.
-        //Only load the byte i need to edit the bits in!!
+        //Only load the byte I need to edit the bits in!!
         //but this works for now...
 
         public static void UpdateBitmap(BinaryReader br, int sectorSize, int bitmapSectors, int sectorCount)
@@ -15,7 +15,7 @@ namespace Kursova
             for (var i = 0; i < bitmapSectors; i++)
                 bitArr[i] = true;
 
-            br.BaseStream.Position = bitmapSectors * sectorSize + 1;
+            br.BaseStream.Position = bitmapSectors * sectorSize + 1;//raises weird error sometimes
             for (var i = bitmapSectors; i < sectorCount; i++)
             {
                 var tmp = br.ReadChar();//first char of file/dir name

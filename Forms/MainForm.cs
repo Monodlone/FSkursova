@@ -26,25 +26,45 @@ namespace Kursova.Forms
 
         private void CreateFileBtn_Click(object sender, EventArgs e)
         {
-            var createFileForm = new CreateFileForm(true);
-            createFileForm.ShowDialog();
+            var objActionsForm = new ObjActionsForm(true, false, false);
+            objActionsForm.ShowDialog();
         }
 
         private void CreateDirBtn_Click(object sender, EventArgs e)
         {
-            var createFileForm = new CreateFileForm(false);
-            createFileForm.ShowDialog();
+            var objActionsForm = new ObjActionsForm(false, false, false);
+            objActionsForm.ShowDialog();
+        }
+
+        private void ViewBtn_Click(object sender, EventArgs e)
+        {
+            if (FileToInteract == null) return;
+
+            var objActionsForm = new ObjActionsForm(true, false, true);
+            var fileInfo = FileSystem.ReadFile((long)FileToInteract.Tag, FileToInteract.Text + ".txt");
+            objActionsForm.SetFileContents(fileInfo);
+            objActionsForm.ShowDialog();
+        }
+
+        private void EditBtn_Click(object sender, EventArgs e)
+        {
+            if (FileToInteract == null) return;
+
+            var objActionsForm = new ObjActionsForm(true, true, false);
+            objActionsForm.ShowDialog();
         }
 
         private void treeView_AfterSelect(object sender, TreeViewEventArgs e)
         {
-            //find the selected node
             var currNode = treeView.SelectedNode;
-            //if it's a dir update CWD
-            if (currNode.ForeColor == Color.Red)
+            if (currNode.ForeColor == Color.Red)//Red == Directory
+            {
                 CWD = currNode;
-            //if it's a file update fileToInteract
-            else if (currNode.ForeColor == Color.Green)
+                FileToInteract = null;
+            }
+
+            //TODO maybe change to just else in future
+            else //if (currNode.ForeColor == Color.Green)//Green == File
                 FileToInteract = currNode;
         }
     }

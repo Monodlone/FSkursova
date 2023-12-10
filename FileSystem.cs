@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System;
+using System.Text;
 using Kursova.Forms;
 
 namespace Kursova
@@ -6,7 +7,8 @@ namespace Kursova
     internal static class FileSystem
     {
         //TODO LIST:
-        //TODO view file contents
+        //TODO can't view long files on more than one sector
+        //TODO viewing a paragraph shown random char at start
 
         private static readonly FileStream Stream = File.Create("C:\\Users\\PiwKi\\Desktop\\fs_file");
         private static readonly BinaryWriter Bw = new(Stream, Encoding.UTF8, true);
@@ -67,8 +69,8 @@ namespace Kursova
                 Bw.Write(fileContents != null? fileContents: "");
                 
                 //write special value at end of sector
-                Stream.Position = writeOffset + SectorSize - 2;
-                Bw.Write((sbyte)-128);
+                Stream.Position = writeOffset + SectorSize - 8;
+                Bw.Write((long)-1);
 
                 UpdateRoot((writeOffset / SectorSize) + 1);
                 UpdateBitmap();
@@ -99,6 +101,38 @@ namespace Kursova
 
         public static long GetRootOffset() => RootOffset;
 
+        public static string[]? ReadFile(long offset, string fullName)
+        {
+            var info = new string[2];
+            Stream.Position = offset;
+
+            var check = Br.ReadByte();//true for files, false for directories
+            if (check != 1) return null;
+
+            Stream.Position++;
+            var name = _ToString(Br.ReadChars(fullName.Length));
+            if (name != fullName) return null;
+            info[0] = name;
+
+            Stream.Position++;
+            var contents = "";
+            long nextSector = default;
+            var readLength = (int)SectorSize - fullName.Length - 11;
+            while (nextSector != -1)
+            {
+                contents += _ToString(Br.ReadChars(readLength));
+                var bytes = Br.ReadBytes(8);
+                nextSector = BitConverter.ToInt64(bytes , 0);
+
+                if (nextSector == -1) break;
+                Stream.Position = nextSector;
+                readLength = (int)SectorSize - 8;
+            }
+
+            info[1] = contents;
+            return info;
+        }
+
         private static void UpdateBitmap()
         {
             Stream.Position = 0;
@@ -124,7 +158,7 @@ namespace Kursova
                 Stream.Position = writeOffsets[i + 1];
             }
             //special value for end of last sector
-            Stream.Position = writeOffsets[^1] + SectorSize - 2;//^1 points to last element
+            Stream.Position = writeOffsets[^1] + SectorSize - 8;//^1 points to last element
             Bw.Write((long)-1);
 
             UpdateRoot(writeOffsets[0]);
@@ -158,6 +192,15 @@ namespace Kursova
             Stream.Position = (RootOffset * SectorSize) + _rootFileAddressOffset + 5;
             Bw.Write(fileOffset);
             _rootFileAddressOffset++;
+        }
+
+        private static string _ToString(char[] chars)
+        {
+            var str = "";
+            foreach (var ch in chars)
+                str += ch;
+
+            return str;
         }
     }
 }

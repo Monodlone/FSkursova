@@ -1,6 +1,6 @@
 ﻿namespace Kursova.Forms
 {
-    partial class CreateFileForm
+    partial class ObjActionsForm
     {
         /// <summary>
         /// Required designer variable.
@@ -34,6 +34,7 @@
             contentsLbl = new Label();
             CreateBtn = new Button();
             extensionLbl = new Label();
+            EditBtn = new Button();
             SuspendLayout();
             // 
             // nameTextbox
@@ -55,11 +56,12 @@
             // 
             // contentsTextbox
             // 
+            contentsTextbox.Font = new Font("Segoe UI", 10F);
             contentsTextbox.Location = new Point(95, 64);
             contentsTextbox.Multiline = true;
             contentsTextbox.Name = "contentsTextbox";
             contentsTextbox.ScrollBars = ScrollBars.Vertical;
-            contentsTextbox.Size = new Size(249, 220);
+            contentsTextbox.Size = new Size(343, 280);
             contentsTextbox.TabIndex = 2;
             // 
             // contentsLbl
@@ -74,7 +76,7 @@
             // CreateBtn
             // 
             CreateBtn.Font = new Font("Segoe UI", 11F);
-            CreateBtn.Location = new Point(252, 310);
+            CreateBtn.Location = new Point(346, 350);
             CreateBtn.Name = "CreateBtn";
             CreateBtn.Size = new Size(92, 35);
             CreateBtn.TabIndex = 4;
@@ -92,11 +94,22 @@
             extensionLbl.TabIndex = 5;
             extensionLbl.Text = ".txt";
             // 
+            // EditBtn
+            // 
+            EditBtn.Font = new Font("Segoe UI", 11F);
+            EditBtn.Location = new Point(346, 350);
+            EditBtn.Name = "EditBtn";
+            EditBtn.Size = new Size(92, 35);
+            EditBtn.TabIndex = 6;
+            EditBtn.Text = "Edit";
+            EditBtn.UseVisualStyleBackColor = true;
+            // 
             // CreateFileForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(356, 357);
+            ClientSize = new Size(450, 397);
+            Controls.Add(EditBtn);
             Controls.Add(extensionLbl);
             Controls.Add(CreateBtn);
             Controls.Add(contentsLbl);
@@ -105,7 +118,7 @@
             Controls.Add(nameTextbox);
             Name = "CreateFileForm";
             Text = "Create";
-            Load += CreateFileForm_Load;
+            Load += ObjActionsForm_Load;
             ResumeLayout(false);
             PerformLayout();
         }
@@ -118,5 +131,6 @@
         private Label contentsLbl;
         private Button CreateBtn;
         private Label extensionLbl;
+        private Button EditBtn;
     }
 }
