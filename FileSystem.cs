@@ -1,5 +1,4 @@
-﻿using System;
-using System.Text;
+﻿using System.Text;
 using Kursova.Forms;
 
 namespace Kursova
@@ -7,8 +6,8 @@ namespace Kursova
     internal static class FileSystem
     {
         //TODO LIST:
-        //TODO can't view long files on more than one sector
-        //TODO viewing a paragraph shown random char at start
+        //TODO can't view long files on more than one sector -> error in bitmap
+        //TODO writing a paragraph(one sector) writes random char before first letter
 
         private static readonly FileStream Stream = File.Create("C:\\Users\\PiwKi\\Desktop\\fs_file");
         private static readonly BinaryWriter Bw = new(Stream, Encoding.UTF8, true);
@@ -66,8 +65,8 @@ namespace Kursova
                 Bw.Write(true);
                 Bw.Write(fileName + ".txt");
 
-                Bw.Write(fileContents != null? fileContents: "");
-                
+                Bw.Write(fileContents != null? fileContents: null);
+
                 //write special value at end of sector
                 Stream.Position = writeOffset + SectorSize - 8;
                 Bw.Write((long)-1);
@@ -76,7 +75,6 @@ namespace Kursova
                 UpdateBitmap();
                 MainForm.AddTreeviewNodes(fileName, writeOffset, true);
             }
-
         }
 
         public static void CreateDirectory(string? dirName)
@@ -110,7 +108,7 @@ namespace Kursova
             if (check != 1) return null;
 
             Stream.Position++;
-            var name = _ToString(Br.ReadChars(fullName.Length));
+            var name = MyToString(Br.ReadChars(fullName.Length));
             if (name != fullName) return null;
             info[0] = name;
 
@@ -120,7 +118,7 @@ namespace Kursova
             var readLength = (int)SectorSize - fullName.Length - 11;
             while (nextSector != -1)
             {
-                contents += _ToString(Br.ReadChars(readLength));
+                contents += MyToString(Br.ReadChars(readLength));
                 var bytes = Br.ReadBytes(8);
                 nextSector = BitConverter.ToInt64(bytes , 0);
 
@@ -194,7 +192,7 @@ namespace Kursova
             _rootFileAddressOffset++;
         }
 
-        private static string _ToString(char[] chars)
+        private static string MyToString(char[] chars)
         {
             var str = "";
             foreach (var ch in chars)
