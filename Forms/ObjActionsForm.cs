@@ -27,7 +27,7 @@
         private void CreateBtn_Click(object sender, EventArgs e)
         {
             EditBtn.Visible = false;
-            FileName = nameTextbox.Text;
+            FileName = nameTextbox.Text + ".txt";
             FileContents = contentsTextbox.Text;
             this.Close();
             if(IsFile)
@@ -49,8 +49,9 @@
             {
                 EditBtn.Visible = !IsViewing;
                 CreateBtn.Visible = !IsViewing;
-                contentsTextbox.ReadOnly = true;
-                nameTextbox.ReadOnly = true;
+                contentsTextbox.ReadOnly = IsViewing;
+                nameTextbox.ReadOnly = IsViewing;
+                extensionLbl.Visible = !IsViewing;
             }
         }
     }

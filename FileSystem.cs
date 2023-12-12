@@ -6,8 +6,7 @@ namespace Kursova
     internal static class FileSystem
     {
         //TODO LIST:
-        //TODO can't view long files on more than one sector -> error in bitmap
-        //TODO writing a paragraph(one sector) writes random char before first letter
+        //TODO bitmap throwing some error I've never seen before when writing long files (sometimes)
 
         private static readonly FileStream Stream = File.Create("C:\\Users\\PiwKi\\Desktop\\fs_file");
         private static readonly BinaryWriter Bw = new(Stream, Encoding.UTF8, true);
@@ -56,16 +55,17 @@ namespace Kursova
             }
 
             if (requiredSectors > 1)
-                WriteLongFile(fileName, fileContents, requiredSectors);
+                WriteLongFile(fileName, fileContents, requiredSectors + 1);
             else
             {
                 var writeOffset = Bitmap.FindFreeSector(Br, (int)BitmapSectors, (int)SectorSize);
 
                 Stream.Position = writeOffset;
                 Bw.Write(true);
-                Bw.Write(fileName + ".txt");
+                Bw.Write((fileName + ".txt").ToCharArray());
 
-                Bw.Write(fileContents != null? fileContents: null);
+                var contents = fileContents.ToCharArray();
+                Bw.Write(contents != null? contents: null);
 
                 //write special value at end of sector
                 Stream.Position = writeOffset + SectorSize - 8;
@@ -99,7 +99,7 @@ namespace Kursova
 
         public static long GetRootOffset() => RootOffset;
 
-        public static string[]? ReadFile(long offset, string fullName)
+        internal static string[]? ReadFile(long offset, string fullName)
         {
             var info = new string[2];
             Stream.Position = offset;
@@ -107,15 +107,13 @@ namespace Kursova
             var check = Br.ReadByte();//true for files, false for directories
             if (check != 1) return null;
 
-            Stream.Position++;
             var name = MyToString(Br.ReadChars(fullName.Length));
             if (name != fullName) return null;
             info[0] = name;
 
-            Stream.Position++;
             var contents = "";
             long nextSector = default;
-            var readLength = (int)SectorSize - fullName.Length - 11;
+            var readLength = (int)SectorSize - fullName.Length - 9;
             while (nextSector != -1)
             {
                 contents += MyToString(Br.ReadChars(readLength));
@@ -145,11 +143,13 @@ namespace Kursova
             var strings = SplitString(fileContents, fileName.Length + 5, requiredSectors);
             Stream.Position = writeOffsets[0];
             Bw.Write(true);
-            Bw.Write(fileName + ".txt");
+            Bw.Write((fileName + ".txt").ToCharArray());
 
             for (var i = 0; i < requiredSectors; i++)
             {
-                Bw.Write(strings[i]);
+                if(strings[i] == null)
+                    continue;
+                Bw.Write(strings[i].ToCharArray());
                 if (i >= writeOffsets.Length - 1) 
                     continue;
                 Bw.Write(writeOffsets[i + 1]);
@@ -170,7 +170,7 @@ namespace Kursova
             var firstPart = "";
             var indx = 0;
             int i;
-            for (i = 0; i < SectorSize - nameSize - 2; i++)
+            for (i = 0; i <= SectorSize - nameSize - 9; i++)
                 firstPart += str[i];
             strs[indx++] = firstPart;
 
@@ -179,8 +179,11 @@ namespace Kursova
             {
                 strs[indx] += str[i];
                 counter++;
-                if (counter == 511)
+                if (counter == SectorSize - 8)
+                {
                     indx++;
+                    counter = 0;
+                }
             }
             return strs;
         }
