@@ -62,8 +62,6 @@ namespace Kursova.Forms
                 CWD = currNode;
                 FileToInteract = null;
             }
-
-            //TODO maybe change to just else in future
             else //if (currNode.ForeColor == Color.Green)//Green == File
                 FileToInteract = currNode;
         }

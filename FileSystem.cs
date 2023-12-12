@@ -6,7 +6,7 @@ namespace Kursova
     internal static class FileSystem
     {
         //TODO LIST:
-        //TODO bitmap throwing some error I've never seen before when writing long files (sometimes)
+        //TODO bitmap (sometimes) throwing error when writing long files
 
         private static readonly FileStream Stream = File.Create("C:\\Users\\PiwKi\\Desktop\\fs_file");
         private static readonly BinaryWriter Bw = new(Stream, Encoding.UTF8, true);
