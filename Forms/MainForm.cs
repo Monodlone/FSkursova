@@ -46,6 +46,14 @@ namespace Kursova.Forms
             objActionsForm.ShowDialog();
         }
 
+        private void DeleteBtn_Click(object sender, EventArgs e)
+        {
+            if (FileToInteract == null)
+                FileSystem.DeleteObject((long)CWD.Tag);
+            else
+                FileSystem.DeleteObject((long)FileToInteract.Tag);
+        }
+
         private void EditBtn_Click(object sender, EventArgs e)
         {
             if (FileToInteract == null) return;

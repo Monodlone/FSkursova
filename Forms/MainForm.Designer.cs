@@ -89,6 +89,7 @@
             DeleteBtn.TabIndex = 6;
             DeleteBtn.Text = "Delete";
             DeleteBtn.UseVisualStyleBackColor = true;
+            DeleteBtn.Click += DeleteBtn_Click;
             // 
             // ImportBtn
             // 

@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using Kursova.Forms;
+using Microsoft.VisualBasic;
 
 namespace Kursova
 {
@@ -7,6 +8,7 @@ namespace Kursova
     {
         //TODO LIST:
         //TODO bitmap (sometimes) throwing error when writing long files
+        //TODO can't delete file if it's larger than 8 sectors
 
         private static readonly FileStream Stream = File.Create("C:\\Users\\PiwKi\\Desktop\\fs_file");
         private static readonly BinaryWriter Bw = new(Stream, Encoding.UTF8, true);
@@ -129,6 +131,36 @@ namespace Kursova
             return info;
         }
 
+        internal static void DeleteObject(long offset)
+        {
+            if (offset < 1536)
+                return;
+            var offsets = new long[8]; 
+            offsets[0] = offset;
+            Stream.Position = offset + (SectorSize - 8);
+            //read sectors and save all offsets of the file
+            long nextSector = default;
+            var indx = 1;
+            while (nextSector != -1)
+            {
+                var bytes = Br.ReadBytes(8);
+                nextSector = BitConverter.ToInt64(bytes , 0);
+                if (nextSector == -1) break;
+                offsets[indx++] = nextSector;
+                Stream.Position = nextSector + (SectorSize - 8);
+            }
+            //replace sectors at offsets with empty bytes
+            foreach (var offst in offsets)
+            {
+                Stream.Position = offst;
+                for (var i = 0; i < SectorSize;)
+                {
+                    Bw.Write((long)0);
+                    i += 8;
+                }
+            }
+        }
+
         private static void UpdateBitmap()
         {
             Stream.Position = 0;
@@ -148,7 +180,7 @@ namespace Kursova
             for (var i = 0; i < requiredSectors; i++)
             {
                 if(strings[i] == null)
-                    continue;
+                    break;
                 Bw.Write(strings[i].ToCharArray());
                 if (i >= writeOffsets.Length - 1) 
                     continue;
@@ -156,7 +188,7 @@ namespace Kursova
                 Stream.Position = writeOffsets[i + 1];
             }
             //special value for end of last sector
-            Stream.Position = writeOffsets[^1] + SectorSize - 8;//^1 points to last element
+            Stream.Position = writeOffsets[^2] + SectorSize - 8;
             Bw.Write((long)-1);
 
             UpdateRoot(writeOffsets[0]);
