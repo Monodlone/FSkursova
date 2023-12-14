@@ -6,7 +6,7 @@ namespace Kursova.Forms
     {
         private static readonly TreeNode RootNode = new("Root");
         internal static TreeNode CWD { get; private set; } = RootNode;
-        private TreeNode? FileToInteract { get; set; }
+        internal static TreeNode? FileToInteract { get; private set; }
 
 
 
@@ -21,6 +21,8 @@ namespace Kursova.Forms
         }
 
         public static void DeleteNode(TreeNode node) => node.Remove();
+
+        //public static TreeNode GetSelectedNode() => treeView.SelectedNode;
 
         private void MainForm_Load(object sender, EventArgs e)
         {
@@ -63,6 +65,8 @@ namespace Kursova.Forms
             if (FileToInteract == null) return;
 
             var objActionsForm = new ObjActionsForm(true, true, false);
+            var fileInfo = FileSystem.ReadFile((long)FileToInteract.Tag, FileToInteract.Text + ".txt");
+            objActionsForm.SetFileContents(fileInfo);
             objActionsForm.ShowDialog();
         }
 

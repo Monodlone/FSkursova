@@ -30,10 +30,19 @@
             FileName = nameTextbox.Text;
             FileContents = contentsTextbox.Text;
             this.Close();
-            if(IsFile)
+            if (IsFile)
                 FileSystem.CreateFile(FileName, FileContents);
             else
                 FileSystem.CreateDirectory(FileName);
+        }
+
+        private void EditBtn_Click(object sender, EventArgs e)
+        {
+            FileName = nameTextbox.Text;
+            FileContents = contentsTextbox.Text;
+            this.Close();
+            FileSystem.DeleteObject(MainForm.FileToInteract);
+            FileSystem.CreateFile(FileName, FileContents);
         }
 
         private void ObjActionsForm_Load(object sender, EventArgs e)

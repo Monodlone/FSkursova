@@ -8,8 +8,9 @@ namespace Kursova
     {
         //TODO LIST:
         //TODO bitmap (sometimes) throwing error when writing long files
-        //TODO can't delete file if it's larger than 8 sectors
-        //TODO deleting files from directories doesn't delete the offset for the file in them
+        //TODO can't delete file if it's larger than 16 sectors
+        //TODO if there are dirs in CWD -> to delete CWD you need to delete the dirs inside first
+        //TODO when viewing large files unknown char at end
 
         private static readonly FileStream Stream = File.Create("C:\\Users\\PiwKi\\Desktop\\fs_file");
         private static readonly BinaryWriter Bw = new(Stream, Encoding.UTF8, true);
@@ -136,7 +137,6 @@ namespace Kursova
             return info;
         }
 
-        //TODO bad code can't think right now
         internal static void DeleteObject(TreeNode? obj)
         {
             if (obj == null) return;
@@ -189,7 +189,7 @@ namespace Kursova
         {
             if (fileOffset < 1536)
                 return;
-            var offsets = new long[8]; 
+            var offsets = new long[16]; 
             offsets[0] = fileOffset;
             Stream.Position = fileOffset + (SectorSize - 8);
             //read sectors and save all offsets of the file

@@ -103,8 +103,9 @@
             EditBtn.TabIndex = 6;
             EditBtn.Text = "Edit";
             EditBtn.UseVisualStyleBackColor = true;
+            EditBtn.Click += EditBtn_Click;
             // 
-            // CreateFileForm
+            // ObjActionsForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
@@ -116,7 +117,7 @@
             Controls.Add(contentsTextbox);
             Controls.Add(nameLbl);
             Controls.Add(nameTextbox);
-            Name = "CreateFileForm";
+            Name = "ObjActionsForm";
             Text = "Create";
             Load += ObjActionsForm_Load;
             ResumeLayout(false);
