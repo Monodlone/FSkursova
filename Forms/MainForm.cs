@@ -1,10 +1,13 @@
+using System.Reflection.Metadata.Ecma335;
+
 namespace Kursova.Forms
 {
     public partial class MainForm : Form
     {
         private static readonly TreeNode RootNode = new("Root");
-        private static TreeNode CWD { get; set; } = RootNode;
+        internal static TreeNode CWD { get; private set; } = RootNode;
         private TreeNode? FileToInteract { get; set; }
+
 
 
         public MainForm() => InitializeComponent();
@@ -16,6 +19,8 @@ namespace Kursova.Forms
             //add to CWD in treeview
             CWD.Nodes.Add(node);
         }
+
+        public static void DeleteNode(TreeNode node) => node.Remove();
 
         private void MainForm_Load(object sender, EventArgs e)
         {
@@ -48,10 +53,9 @@ namespace Kursova.Forms
 
         private void DeleteBtn_Click(object sender, EventArgs e)
         {
-            if (FileToInteract == null)
-                FileSystem.DeleteObject((long)CWD.Tag);
-            else
-                FileSystem.DeleteObject((long)FileToInteract.Tag);
+            if (treeView.SelectedNode == RootNode) return;
+            
+            FileSystem.DeleteObject(treeView.SelectedNode);
         }
 
         private void EditBtn_Click(object sender, EventArgs e)
@@ -62,7 +66,7 @@ namespace Kursova.Forms
             objActionsForm.ShowDialog();
         }
 
-        private void treeView_AfterSelect(object sender, TreeViewEventArgs e)
+        private void TreeView_AfterSelect(object sender, TreeViewEventArgs e)
         {
             var currNode = treeView.SelectedNode;
             if (currNode.ForeColor == Color.Red)//Red == Directory

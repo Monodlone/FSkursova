@@ -27,7 +27,7 @@
         private void CreateBtn_Click(object sender, EventArgs e)
         {
             EditBtn.Visible = false;
-            FileName = nameTextbox.Text + ".txt";
+            FileName = nameTextbox.Text;
             FileContents = contentsTextbox.Text;
             this.Close();
             if(IsFile)

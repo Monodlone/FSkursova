@@ -9,13 +9,13 @@ namespace Kursova
         //Only load the byte I need to edit the bits in!!
         //but this works for now...
 
-        public static void UpdateBitmap(BinaryReader br, int sectorSize, int bitmapSectors, int sectorCount)
+        internal static void UpdateBitmap(BinaryReader br, int sectorSize, int bitmapSectors, int sectorCount)
         {
             BitArray bitArr = new(sectorCount);
             for (var i = 0; i < bitmapSectors; i++)
                 bitArr[i] = true;
 
-            br.BaseStream.Position = bitmapSectors * sectorSize + 1;//raises weird error sometimes
+            br.BaseStream.Position = bitmapSectors * sectorSize + 2;//raises weird error sometimes
             for (var i = bitmapSectors; i < sectorCount; i++)
             {
                 var tmp = br.ReadChar();//first char of file/dir name
@@ -29,7 +29,7 @@ namespace Kursova
             WriteBitmap(bitArr, new BinaryWriter(FileSystem.GetFileStream()));
         }
 
-        public static long FindFreeSector(BinaryReader br, int bitmapSectors, int sectorSize)
+        internal static long FindFreeSector(BinaryReader br, int bitmapSectors, int sectorSize)
         {
             br.BaseStream.Position = 0;
             var writeOffset = -1;
@@ -59,7 +59,7 @@ namespace Kursova
             return writeOffset + 1;
         }
 
-        public static long[] FindFreeSectors(BinaryReader br, int requiredSectors, int bitmapSectors, int sectorSize)
+        internal static long[] FindFreeSectors(BinaryReader br, int requiredSectors, int bitmapSectors, int sectorSize)
         {
             br.BaseStream.Position = 0;
             var offsets = new long[requiredSectors];

@@ -9,20 +9,21 @@ namespace Kursova
         //TODO LIST:
         //TODO bitmap (sometimes) throwing error when writing long files
         //TODO can't delete file if it's larger than 8 sectors
+        //TODO deleting files from directories doesn't delete the offset for the file in them
 
         private static readonly FileStream Stream = File.Create("C:\\Users\\PiwKi\\Desktop\\fs_file");
         private static readonly BinaryWriter Bw = new(Stream, Encoding.UTF8, true);
         private static readonly BinaryReader Br = new(Stream, Encoding.UTF8, true);
         private static long BitmapSectors { get; set; } = 1;
         private static long RootOffset { get; set; }
-        private static int _rootFileAddressOffset;
+        //private static int _rootFileAddressOffset;
 
         private const long SectorCount = 5120;
         private const long SectorSize = 512;
         private const long TotalSize = SectorCount * SectorSize;
         private const long BitmapSize = SectorCount / 8;
 
-        public static void Initiate()
+        internal static void Initiate()
         {
             Stream.SetLength(TotalSize);
             Stream.Position = 0;
@@ -33,13 +34,15 @@ namespace Kursova
                 BitmapSectors++;
                 tmp /= SectorSize;
             }
-            RootOffset = BitmapSectors;
-            Stream.Position = RootOffset * SectorSize;
+            RootOffset = BitmapSectors * SectorSize + 1;
+            Stream.Position = RootOffset;
             Bw.Write("Root");
+            Stream.Position = RootOffset + (SectorSize - 8);
+            Bw.Write((long)-1);
             UpdateBitmap();
         }
 
-        public static void CreateFile(string? fileName, string fileContents)
+        internal static void CreateFile(string? fileName, string fileContents)
         {
             if (fileName == null) return;
             //1 find free sector using bitmap
@@ -73,13 +76,13 @@ namespace Kursova
                 Stream.Position = writeOffset + SectorSize - 8;
                 Bw.Write((long)-1);
 
-                UpdateRoot((writeOffset / SectorSize) + 1);
+                UpdateDir(writeOffset, MainForm.CWD);
                 UpdateBitmap();
                 MainForm.AddTreeviewNodes(fileName, writeOffset, true);
             }
         }
 
-        public static void CreateDirectory(string? dirName)
+        internal static void CreateDirectory(string? dirName)
         {
             if (dirName == null) return;
             //find free sector
@@ -89,17 +92,19 @@ namespace Kursova
             var writeOffset = Bitmap.FindFreeSector(Br, (int)BitmapSectors, (int)SectorSize);
             Stream.Position = writeOffset;
             Bw.Write(false);
-            Bw.Write(dirName);
+            Bw.Write(dirName.ToCharArray());
 
-            UpdateRoot((writeOffset / SectorSize) + 1);
+            UpdateDir(writeOffset, MainForm.CWD);
+            Stream.Position = writeOffset + SectorSize - 8;
+            Bw.Write((long)-1);
+
             UpdateBitmap();
-
             MainForm.AddTreeviewNodes(dirName, writeOffset, false);
         }
 
-        public static FileStream GetFileStream() => Stream;
+        internal static FileStream GetFileStream() => Stream;
 
-        public static long GetRootOffset() => RootOffset;
+        internal static long GetRootOffset() => RootOffset;
 
         internal static string[]? ReadFile(long offset, string fullName)
         {
@@ -114,7 +119,7 @@ namespace Kursova
             info[0] = name;
 
             var contents = "";
-            long nextSector = default;
+            long nextSector = 0;
             var readLength = (int)SectorSize - fullName.Length - 9;
             while (nextSector != -1)
             {
@@ -131,13 +136,62 @@ namespace Kursova
             return info;
         }
 
-        internal static void DeleteObject(long offset)
+        //TODO bad code can't think right now
+        internal static void DeleteObject(TreeNode? obj)
         {
-            if (offset < 1536)
+            if (obj == null) return;
+            var objOffset = (long)obj.Tag;
+            //File
+            if (obj.ForeColor == Color.Green)
+            {
+                DeleteFile(objOffset, (long)obj.Parent.Tag, obj.Parent.Text.Length);
+                MainForm.DeleteNode(obj);
+            }
+            //Directory
+            else
+            {
+                //check if dir empty.
+                var nameLength = obj.Text.Length;
+                if (IsDirEmpty(objOffset, nameLength))
+                {
+                    //empty -> delete dir
+                    Stream.Position = objOffset;
+                    for (var i = 0; i < nameLength; i += 8)
+                        Bw.Write((long)0);//long because 8bytes at a time -> fewer cycles
+                    //clear end of sector value
+                    Stream.Position = objOffset + SectorSize - 8;
+                    Bw.Write((long)0);
+                    CleanParentDir(objOffset, (long)obj.Parent.Tag, obj.Parent.Text.Length);
+                }
+                //not empty -> run DeleteFile with all offsets from directory
+                else
+                {
+                    var currFileOffset = objOffset + nameLength + 1;
+                    while (currFileOffset != 0)
+                    {
+                        Stream.Position = currFileOffset;
+                        var bytes = Br.ReadBytes(8);
+                        currFileOffset = BitConverter.ToInt64(bytes , 0);
+                        DeleteFile(currFileOffset, (long)obj.Parent.Tag, obj.Parent.Text.Length);
+                    }
+                    //delete dir
+                    Stream.Position = objOffset;
+                    for (var i = 0; i < SectorSize; i += 8)
+                        Bw.Write((long)0);
+                    CleanParentDir(objOffset, (long)obj.Parent.Tag, obj.Parent.Text.Length);
+                }
+                MainForm.DeleteNode(obj);
+            }
+            UpdateBitmap();
+        }
+
+        private static void DeleteFile(long fileOffset, long parentOffset, int parentNameLength)
+        {
+            if (fileOffset < 1536)
                 return;
             var offsets = new long[8]; 
-            offsets[0] = offset;
-            Stream.Position = offset + (SectorSize - 8);
+            offsets[0] = fileOffset;
+            Stream.Position = fileOffset + (SectorSize - 8);
             //read sectors and save all offsets of the file
             long nextSector = default;
             var indx = 1;
@@ -149,22 +203,47 @@ namespace Kursova
                 offsets[indx++] = nextSector;
                 Stream.Position = nextSector + (SectorSize - 8);
             }
-            //replace sectors at offsets with empty bytes
-            foreach (var offst in offsets)
+            //replace sectors with 0 bytes
+            foreach (var currOffset in offsets)
             {
-                Stream.Position = offst;
-                for (var i = 0; i < SectorSize;)
-                {
-                    Bw.Write((long)0);
-                    i += 8;
-                }
+                Stream.Position = currOffset;
+                for (var i = 0; i < SectorSize; i += 8)
+                    Bw.Write((long)0);//long because 8bytes at a time -> fewer cycles
             }
+            //delete offset from parent directory
+            CleanParentDir(fileOffset, parentOffset, parentNameLength);
         }
 
-        private static void UpdateBitmap()
+        private static bool IsDirEmpty(long offset, int nameLength)
         {
-            Stream.Position = 0;
-            Bitmap.UpdateBitmap(new BinaryReader(Stream), (int)SectorSize, (int)BitmapSectors, (int)SectorCount);
+            Stream.Position = offset + nameLength + 1;
+            //stream is between name and end of sector value
+            while (Stream.Position < offset + (SectorSize - nameLength - 9))
+            {
+                var currBytes = Br.ReadBytes(8);
+                var value = BitConverter.ToInt64(currBytes , 0);
+                if (value != 0)
+                    return false;
+            }
+            return true;
+        }
+
+        private static void CleanParentDir(long objOffset, long parentOffset, int parentNameLength)
+        {
+            //read dir and search for offset and delete it
+            Stream.Position = parentOffset + parentNameLength + 1;
+            while (Stream.Position < objOffset + (SectorSize - parentNameLength - 9))
+            {
+                var currBytes = Br.ReadBytes(8);
+                var value = BitConverter.ToInt64(currBytes , 0);
+                if (value != objOffset)
+                    continue;
+                else
+                {
+                    Stream.Position -= 8;
+                    Bw.Write((long)0);
+                }
+            }
         }
 
         private static void WriteLongFile(string? fileName, string fileContents, int requiredSectors)
@@ -191,7 +270,7 @@ namespace Kursova
             Stream.Position = writeOffsets[^2] + SectorSize - 8;
             Bw.Write((long)-1);
 
-            UpdateRoot(writeOffsets[0]);
+            UpdateDir(writeOffsets[0], MainForm.CWD);
             UpdateBitmap();
             MainForm.AddTreeviewNodes(fileName, writeOffsets[0], true);
         }
@@ -220,11 +299,26 @@ namespace Kursova
             return strs;
         }
 
-        private static void UpdateRoot(long fileOffset)
+        private static void UpdateDir(long fileOffset, TreeNode CWD)
         {
-            Stream.Position = (RootOffset * SectorSize) + _rootFileAddressOffset + 5;
+            Stream.Position = (long)CWD.Tag + CWD.Text.Length + 1;
+            var freeBytesOffset = -1;
+            for (var i = 0; i < 63; i++)//512/8 = 64(8 bytes per offset) - 1 byte for end of file/dir value
+            {
+                var bytes = Br.ReadBytes(8);
+                if (BitConverter.ToInt64(bytes , 0) != 0)
+                    continue;
+                break;
+            }
+
+            Stream.Position -= 8;
             Bw.Write(fileOffset);
-            _rootFileAddressOffset++;
+        }
+        
+        private static void UpdateBitmap()
+        {
+            Stream.Position = 0;
+            Bitmap.UpdateBitmap(new BinaryReader(Stream), (int)SectorSize, (int)BitmapSectors, (int)SectorCount);
         }
 
         private static string MyToString(char[] chars)
