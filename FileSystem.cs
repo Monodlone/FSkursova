@@ -7,8 +7,9 @@ namespace Kursova
     internal static class FileSystem
     {
         //TODO LIST:
-        //TODO bitmap (sometimes) throwing error when writing long files
+        //TODO bitmap (sometimes) throws error when writing long files
         //TODO can't delete file if it's larger than 16 sectors
+        //TODO can't edit directories (maybe make it so the new name can't be longer than the old one)
         //TODO if there are dirs in CWD -> to delete CWD you need to delete the dirs inside first
         //TODO when viewing large files unknown char at end
 
@@ -17,7 +18,6 @@ namespace Kursova
         private static readonly BinaryReader Br = new(Stream, Encoding.UTF8, true);
         private static long BitmapSectors { get; set; } = 1;
         private static long RootOffset { get; set; }
-        //private static int _rootFileAddressOffset;
 
         private const long SectorCount = 5120;
         private const long SectorSize = 512;
@@ -28,7 +28,6 @@ namespace Kursova
         {
             Stream.SetLength(TotalSize);
             Stream.Position = 0;
-
             var tmp = BitmapSize;
             while (tmp > SectorSize)
             {
@@ -59,7 +58,6 @@ namespace Kursova
                 requiredSectors++;
                 fileSize -= SectorSize;
             }
-
             if (requiredSectors > 1)
                 WriteLongFile(fileName, fileContents, requiredSectors + 1);
             else
@@ -70,8 +68,8 @@ namespace Kursova
                 Bw.Write(true);
                 Bw.Write((fileName + ".txt").ToCharArray());
 
-                var contents = fileContents.ToCharArray();
-                Bw.Write(contents != null? contents: null);
+                if (fileContents != null)
+                    Bw.Write(fileContents.ToCharArray());
 
                 //write special value at end of sector
                 Stream.Position = writeOffset + SectorSize - 8;
@@ -258,11 +256,9 @@ namespace Kursova
 
             for (var i = 0; i < requiredSectors; i++)
             {
-                if(strings[i] == null)
-                    break;
+                if(strings[i] == null) break;
                 Bw.Write(strings[i].ToCharArray());
-                if (i >= writeOffsets.Length - 1) 
-                    continue;
+                if (i >= writeOffsets.Length - 1) continue;
                 Bw.Write(writeOffsets[i + 1]);
                 Stream.Position = writeOffsets[i + 1];
             }
@@ -310,7 +306,6 @@ namespace Kursova
                     continue;
                 break;
             }
-
             Stream.Position -= 8;
             Bw.Write(fileOffset);
         }
@@ -326,7 +321,6 @@ namespace Kursova
             var str = "";
             foreach (var ch in chars)
                 str += ch;
-
             return str;
         }
     }
