@@ -6,12 +6,15 @@ namespace Kursova
 {
     internal static class FileSystem
     {
-        //TODO LIST:
-        //TODO bitmap (sometimes) throws error when writing long files
-        //TODO can't delete file if it's larger than 16 sectors
-        //TODO can't edit directories (maybe make it so the new name can't be longer than the old one)
-        //TODO if there are dirs in CWD -> to delete CWD you need to delete the dirs inside first
-        //TODO when viewing large files unknown char at end
+        //TODO Problem LIST: 
+        //bitmap (sometimes) throws error when writing long files
+        //can't delete file if it's larger than 16 sectors
+        //can't edit directories (maybe make it so the new name can't be longer than the old one)
+        //if there are dirs in CWD -> to delete CWD you need to delete the dirs inside first
+
+        //TODO ForImplementing LIST:
+        //import a file
+        //Resiliency
 
         private static readonly FileStream Stream = File.Create("C:\\Users\\PiwKi\\Desktop\\fs_file");
         private static readonly BinaryWriter Bw = new(Stream, Encoding.UTF8, true);
@@ -66,7 +69,7 @@ namespace Kursova
 
                 Stream.Position = writeOffset;
                 Bw.Write(true);
-                Bw.Write((fileName + ".txt").ToCharArray());
+                Bw.Write(fileName.ToCharArray());
 
                 if (fileContents != null)
                     Bw.Write(fileContents.ToCharArray());
@@ -105,7 +108,7 @@ namespace Kursova
 
         internal static long GetRootOffset() => RootOffset;
 
-        internal static string[]? ReadFile(long offset, string fullName)
+        internal static string[]? ReadFile(long offset, string fileName)
         {
             var info = new string[2];
             Stream.Position = offset;
@@ -113,13 +116,13 @@ namespace Kursova
             var check = Br.ReadByte();//true for files, false for directories
             if (check != 1) return null;
 
-            var name = MyToString(Br.ReadChars(fullName.Length));
-            if (name != fullName) return null;
+            var name = MyToString(Br.ReadChars(fileName.Length));
+            if (name != fileName) return null;
             info[0] = name;
 
             var contents = "";
             long nextSector = 0;
-            var readLength = (int)SectorSize - fullName.Length - 9;
+            var readLength = (int)SectorSize - fileName.Length - 9;
             while (nextSector != -1)
             {
                 contents += MyToString(Br.ReadChars(readLength));
@@ -130,8 +133,8 @@ namespace Kursova
                 Stream.Position = nextSector;
                 readLength = (int)SectorSize - 8;
             }
-
-            info[1] = contents;
+            info[1] = CutString(contents);
+            //info[1] = contents;
             return info;
         }
 
@@ -249,16 +252,19 @@ namespace Kursova
             if (fileName == null) return;
 
             var writeOffsets = Bitmap.FindFreeSectors(Br, requiredSectors, (int)BitmapSectors, (int)SectorSize);
-            var strings = SplitString(fileContents, fileName.Length + 5, requiredSectors);
+            var strings = SplitString(fileContents, fileName.Length, requiredSectors);
             Stream.Position = writeOffsets[0];
             Bw.Write(true);
-            Bw.Write((fileName + ".txt").ToCharArray());
+            Bw.Write(fileName.ToCharArray());
 
             for (var i = 0; i < requiredSectors; i++)
             {
                 if(strings[i] == null) break;
+
                 Bw.Write(strings[i].ToCharArray());
-                if (i >= writeOffsets.Length - 1) continue;
+
+                if (i >= writeOffsets.Length - 2) break;
+
                 Bw.Write(writeOffsets[i + 1]);
                 Stream.Position = writeOffsets[i + 1];
             }
@@ -277,7 +283,7 @@ namespace Kursova
             var firstPart = "";
             var indx = 0;
             int i;
-            for (i = 0; i <= SectorSize - nameSize - 9; i++)
+            for (i = 0; i < SectorSize - nameSize - 9; i++)
                 firstPart += str[i];
             strs[indx++] = firstPart;
 
@@ -322,6 +328,18 @@ namespace Kursova
             foreach (var ch in chars)
                 str += ch;
             return str;
+        }
+
+        private static string CutString(string str)
+        {
+            //remove trailing empty bytes
+            var cutStr = "";
+            foreach (var t in str)
+            {
+                if (t == 0) break;
+                cutStr += t;
+            }
+            return cutStr;
         }
     }
 }

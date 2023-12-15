@@ -60,7 +60,6 @@
                 CreateBtn.Visible = !IsViewing;
                 contentsTextbox.ReadOnly = IsViewing;
                 nameTextbox.ReadOnly = IsViewing;
-                extensionLbl.Visible = !IsViewing;
             }
         }
     }

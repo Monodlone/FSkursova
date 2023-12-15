@@ -110,6 +110,7 @@
             ExportBtn.TabIndex = 8;
             ExportBtn.Text = "Export";
             ExportBtn.UseVisualStyleBackColor = true;
+            ExportBtn.Click += ExportBtn_Click;
             // 
             // ViewBtn
             // 

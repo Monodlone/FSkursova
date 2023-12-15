@@ -1,4 +1,6 @@
 using System.Reflection.Metadata.Ecma335;
+using System.Text;
+using System.Windows.Forms;
 
 namespace Kursova.Forms
 {
@@ -48,7 +50,7 @@ namespace Kursova.Forms
             if (FileToInteract == null) return;
 
             var objActionsForm = new ObjActionsForm(true, false, true);
-            var fileInfo = FileSystem.ReadFile((long)FileToInteract.Tag, FileToInteract.Text + ".txt");
+            var fileInfo = FileSystem.ReadFile((long)FileToInteract.Tag, FileToInteract.Text);
             objActionsForm.SetFileContents(fileInfo);
             objActionsForm.ShowDialog();
         }
@@ -56,7 +58,7 @@ namespace Kursova.Forms
         private void DeleteBtn_Click(object sender, EventArgs e)
         {
             if (treeView.SelectedNode == RootNode) return;
-            
+
             FileSystem.DeleteObject(treeView.SelectedNode);
         }
 
@@ -65,7 +67,7 @@ namespace Kursova.Forms
             if (FileToInteract == null) return;
 
             var objActionsForm = new ObjActionsForm(true, true, false);
-            var fileInfo = FileSystem.ReadFile((long)FileToInteract.Tag, FileToInteract.Text + ".txt");
+            var fileInfo = FileSystem.ReadFile((long)FileToInteract.Tag, FileToInteract.Text);
             objActionsForm.SetFileContents(fileInfo);
             objActionsForm.ShowDialog();
         }
@@ -80,6 +82,24 @@ namespace Kursova.Forms
             }
             else //if (currNode.ForeColor == Color.Green)//Green == File
                 FileToInteract = currNode;
+        }
+
+        private void ExportBtn_Click(object sender, EventArgs e)
+        {
+            if (FileToInteract == null) return;
+
+            var svFileDialog = new SaveFileDialog();
+            svFileDialog.Filter = "txt files (*.txt)|*.txt";
+            if (svFileDialog.ShowDialog() == DialogResult.OK)
+            {
+                var info = FileSystem.ReadFile((long)FileToInteract.Tag, FileToInteract.Text);
+                using var fileStream = new FileStream(svFileDialog.FileName, FileMode.Create);
+                using (var sw = new StreamWriter(fileStream))
+                {
+                    sw.Write(info[1]);
+                }
+                
+            }
         }
     }
 }
