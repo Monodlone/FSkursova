@@ -94,14 +94,55 @@ namespace Kursova.Forms
             {
                 var info = FileSystem.ReadFile((long)FileToInteract.Tag, FileToInteract.Text);
                 using var fileStream = new FileStream(svFileDialog.FileName, FileMode.Create);
+                try
+                {
                     using (var sw = new StreamWriter(fileStream))
                         sw.Write(info?[1]);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Error: Could not write file to disk. Original error: " + ex.Message);
+                }
             }
         }
 
         private void ImportBtn_Click(object sender, EventArgs e)
         {
+            var opnFileDialog = new OpenFileDialog();
+            opnFileDialog.Filter = "TXT files|*.txt";
+            if (opnFileDialog.ShowDialog() == DialogResult.OK)
+            {
+                var path = opnFileDialog.FileName;
+                var contents = "";
+                try
+                {
+                    using var sr = new StreamReader(path);
+                    contents = sr.ReadToEnd();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Error: Could not read file from disk. Original error: " + ex.Message);
+                }
+                FileSystem.CreateFile(MyGetNameWithoutExtension(path), contents);
+            }
+        }
 
+        private string MyGetNameWithoutExtension(string path)
+        {
+            //C:\Users\PiwKi\Desktop\asd.txt
+            var name = "";
+            var lastIndex = -1;
+            for (var i = 0; i < path.Length; i++)
+                if (path[i] == '\\')
+                    lastIndex = i + 1;
+
+            for (var i = lastIndex; i < path.Length; i++)
+            {
+                if (path[i] == '.')
+                    break;
+                name += path[i];
+            }
+            return name;
         }
     }
 }
