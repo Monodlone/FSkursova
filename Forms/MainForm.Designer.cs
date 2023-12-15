@@ -100,6 +100,7 @@
             ImportBtn.TabIndex = 7;
             ImportBtn.Text = "Import";
             ImportBtn.UseVisualStyleBackColor = true;
+            ImportBtn.Click += ImportBtn_Click;
             // 
             // ExportBtn
             // 

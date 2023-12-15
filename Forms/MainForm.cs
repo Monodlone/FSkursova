@@ -94,12 +94,14 @@ namespace Kursova.Forms
             {
                 var info = FileSystem.ReadFile((long)FileToInteract.Tag, FileToInteract.Text);
                 using var fileStream = new FileStream(svFileDialog.FileName, FileMode.Create);
-                using (var sw = new StreamWriter(fileStream))
-                {
-                    sw.Write(info[1]);
-                }
-                
+                    using (var sw = new StreamWriter(fileStream))
+                        sw.Write(info?[1]);
             }
+        }
+
+        private void ImportBtn_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }
