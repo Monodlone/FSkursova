@@ -29,7 +29,7 @@
             EditBtn.Visible = false;
             FileName = nameTextbox.Text;
             FileContents = contentsTextbox.Text;
-            this.Close();
+            Close();
             if (IsFile)
                 FileSystem.CreateFile(FileName, FileContents);
             else
@@ -38,10 +38,10 @@
 
         private void EditBtn_Click(object sender, EventArgs e)
         {
+            FileSystem.DeleteObject(MainForm.FileToInteract);
             FileName = nameTextbox.Text;
             FileContents = contentsTextbox.Text;
-            this.Close();
-            FileSystem.DeleteObject(MainForm.FileToInteract);
+            Close();
             FileSystem.CreateFile(FileName, FileContents);
         }
 
@@ -54,13 +54,12 @@
             EditBtn.Visible = IsEditing;
             CreateBtn.Visible = !IsEditing;
 
-            if (IsViewing)
-            {
-                EditBtn.Visible = !IsViewing;
-                CreateBtn.Visible = !IsViewing;
-                contentsTextbox.ReadOnly = IsViewing;
-                nameTextbox.ReadOnly = IsViewing;
-            }
+            if (!IsViewing) return;
+
+            EditBtn.Visible = !IsViewing;
+            CreateBtn.Visible = !IsViewing;
+            contentsTextbox.ReadOnly = IsViewing;
+            nameTextbox.ReadOnly = IsViewing;
         }
     }
 }

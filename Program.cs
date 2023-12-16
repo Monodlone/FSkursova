@@ -14,7 +14,6 @@ namespace Kursova
             // see https://aka.ms/applicationconfiguration.
             ApplicationConfiguration.Initialize();
 
-            FileSystem.Initiate();
             Application.Run(new MainForm());
         }
     }

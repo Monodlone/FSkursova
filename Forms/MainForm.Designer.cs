@@ -36,6 +36,7 @@
             ImportBtn = new Button();
             ExportBtn = new Button();
             ViewBtn = new Button();
+            StartBtn = new Button();
             SuspendLayout();
             // 
             // CreateFileBtn
@@ -124,11 +125,23 @@
             ViewBtn.UseVisualStyleBackColor = true;
             ViewBtn.Click += ViewBtn_Click;
             // 
+            // StartBtn
+            // 
+            StartBtn.Font = new Font("Segoe UI", 12F);
+            StartBtn.Location = new Point(251, 259);
+            StartBtn.Name = "StartBtn";
+            StartBtn.Size = new Size(123, 57);
+            StartBtn.TabIndex = 10;
+            StartBtn.Text = "Start";
+            StartBtn.UseVisualStyleBackColor = true;
+            StartBtn.Click += StartBtn_Click;
+            // 
             // MainForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(414, 450);
+            Controls.Add(StartBtn);
             Controls.Add(ViewBtn);
             Controls.Add(ExportBtn);
             Controls.Add(ImportBtn);
@@ -152,5 +165,6 @@
         private Button ImportBtn;
         private Button ExportBtn;
         private Button ViewBtn;
+        private Button StartBtn;
     }
 }

@@ -1,6 +1,5 @@
 ﻿using System.Text;
 using Kursova.Forms;
-using Microsoft.VisualBasic;
 
 namespace Kursova
 {
@@ -14,7 +13,7 @@ namespace Kursova
         //Make restrictions for the file and dir names
 
         //TODO ForImplementing LIST:
-        ////Resiliency
+        //Resiliency
 
         private static readonly FileStream Stream = File.Create("C:\\Users\\PiwKi\\Desktop\\fs_file");
         private static readonly BinaryWriter Bw = new(Stream, Encoding.UTF8, true);
@@ -22,25 +21,29 @@ namespace Kursova
         private static long BitmapSectors { get; set; } = 1;
         private static long RootOffset { get; set; }
 
-        private const long SectorCount = 5120;
-        private const long SectorSize = 512;
-        private const long TotalSize = SectorCount * SectorSize;
-        private const long BitmapSize = SectorCount / 8;
+        private static long _sectorCount;
+        private static long _sectorSize;
+        private static long _totalSize;
+        private static long _bitmapSize;
 
-        internal static void Initiate()
+        internal static void Initiate(long sectorSize, long sectorCount)
         {
-            Stream.SetLength(TotalSize);
+            _sectorCount = sectorCount;
+            _sectorSize = sectorSize;
+            _totalSize = _sectorCount * _sectorSize;
+            _bitmapSize = _sectorCount / 8;
+            Stream.SetLength(_totalSize);
             Stream.Position = 0;
-            var tmp = BitmapSize;
-            while (tmp > SectorSize)
+            var tmp = _bitmapSize;
+            while (tmp > _sectorSize)
             {
                 BitmapSectors++;
-                tmp /= SectorSize;
+                tmp -= _sectorSize;
             }
-            RootOffset = BitmapSectors * SectorSize + 1;
+            RootOffset = BitmapSectors * _sectorSize + 1;
             Stream.Position = RootOffset;
             Bw.Write("Root");
-            Stream.Position = RootOffset + (SectorSize - 8);
+            Stream.Position = RootOffset + (_sectorSize - 8);
             Bw.Write((long)-1);
             UpdateBitmap();
         }
@@ -56,16 +59,16 @@ namespace Kursova
             //5 update the bitmap
             long fileSize = fileName.Length + fileContents.Length;
             var requiredSectors = 1;
-            while (fileSize > SectorSize)
+            while (fileSize > _sectorSize)
             {
                 requiredSectors++;
-                fileSize -= SectorSize;
+                fileSize -= _sectorSize;
             }
             if (requiredSectors > 1)
                 WriteLongFile(fileName, fileContents, requiredSectors + 1);
             else
             {
-                var writeOffset = Bitmap.FindFreeSector(Br, (int)BitmapSectors, (int)SectorSize);
+                var writeOffset = Bitmap.FindFreeSector(Br, (int)BitmapSectors, (int)_sectorSize);
 
                 Stream.Position = writeOffset;
                 Bw.Write(true);
@@ -75,7 +78,7 @@ namespace Kursova
                     Bw.Write(fileContents.ToCharArray());
 
                 //write special value at end of sector
-                Stream.Position = writeOffset + SectorSize - 8;
+                Stream.Position = writeOffset + _sectorSize - 8;
                 Bw.Write((long)-1);
 
                 UpdateDir(writeOffset, MainForm.CWD);
@@ -91,13 +94,13 @@ namespace Kursova
             //change stream position to it
             //write true byte and dir name
             //update the bitmap
-            var writeOffset = Bitmap.FindFreeSector(Br, (int)BitmapSectors, (int)SectorSize);
+            var writeOffset = Bitmap.FindFreeSector(Br, (int)BitmapSectors, (int)_sectorSize);
             Stream.Position = writeOffset;
             Bw.Write(false);
             Bw.Write(dirName.ToCharArray());
 
             UpdateDir(writeOffset, MainForm.CWD);
-            Stream.Position = writeOffset + SectorSize - 8;
+            Stream.Position = writeOffset + _sectorSize - 8;
             Bw.Write((long)-1);
 
             UpdateBitmap();
@@ -108,21 +111,16 @@ namespace Kursova
 
         internal static long GetRootOffset() => RootOffset;
 
-        internal static string[]? ReadFile(long offset, string fileName)
+        internal static string[] ReadFile(long offset, string fileName)
         {
             var info = new string[2];
-            Stream.Position = offset;
+            Stream.Position = offset + 1;
 
-            var check = Br.ReadByte();//true for files, false for directories
-            if (check != 1) return null;
-
-            var name = MyToString(Br.ReadChars(fileName.Length));
-            if (name != fileName) return null;
-            info[0] = name;
+            info[0] = MyToString(Br.ReadChars(fileName.Length));
 
             var contents = "";
             long nextSector = 0;
-            var readLength = (int)SectorSize - fileName.Length - 9;
+            var readLength = (int)_sectorSize - fileName.Length - 9;
             while (nextSector != -1)
             {
                 contents += MyToString(Br.ReadChars(readLength));
@@ -131,7 +129,7 @@ namespace Kursova
 
                 if (nextSector == -1) break;
                 Stream.Position = nextSector;
-                readLength = (int)SectorSize - 8;
+                readLength = (int)_sectorSize - 8;
             }
             info[1] = CutString(contents);
             //info[1] = contents;
@@ -160,7 +158,7 @@ namespace Kursova
                     for (var i = 0; i < nameLength; i += 8)
                         Bw.Write((long)0);//long because 8bytes at a time -> fewer cycles
                     //clear end of sector value
-                    Stream.Position = objOffset + SectorSize - 8;
+                    Stream.Position = objOffset + _sectorSize - 8;
                     Bw.Write((long)0);
                     CleanParentDir(objOffset, (long)obj.Parent.Tag, obj.Parent.Text.Length);
                 }
@@ -177,7 +175,7 @@ namespace Kursova
                     }
                     //delete dir
                     Stream.Position = objOffset;
-                    for (var i = 0; i < SectorSize; i += 8)
+                    for (var i = 0; i < _sectorSize; i += 8)
                         Bw.Write((long)0);
                     CleanParentDir(objOffset, (long)obj.Parent.Tag, obj.Parent.Text.Length);
                 }
@@ -188,11 +186,11 @@ namespace Kursova
 
         private static void DeleteFile(long fileOffset, long parentOffset, int parentNameLength)
         {
-            if (fileOffset < 1536)
+            if (fileOffset < RootOffset)
                 return;
             var offsets = new long[16]; 
             offsets[0] = fileOffset;
-            Stream.Position = fileOffset + (SectorSize - 8);
+            Stream.Position = fileOffset + (_sectorSize - 8);
             //read sectors and save all offsets of the file
             long nextSector = default;
             var indx = 1;
@@ -202,13 +200,13 @@ namespace Kursova
                 nextSector = BitConverter.ToInt64(bytes , 0);
                 if (nextSector == -1) break;
                 offsets[indx++] = nextSector;
-                Stream.Position = nextSector + (SectorSize - 8);
+                Stream.Position = nextSector + (_sectorSize - 8);
             }
             //replace sectors with 0 bytes
             foreach (var currOffset in offsets)
             {
                 Stream.Position = currOffset;
-                for (var i = 0; i < SectorSize; i += 8)
+                for (var i = 0; i < _sectorSize; i += 8)
                     Bw.Write((long)0);//long because 8bytes at a time -> fewer cycles
             }
             //delete offset from parent directory
@@ -219,7 +217,7 @@ namespace Kursova
         {
             Stream.Position = offset + nameLength + 1;
             //stream is between name and end of sector value
-            while (Stream.Position < offset + (SectorSize - nameLength - 9))
+            while (Stream.Position < offset + (_sectorSize - nameLength - 9))
             {
                 var currBytes = Br.ReadBytes(8);
                 var value = BitConverter.ToInt64(currBytes , 0);
@@ -233,7 +231,7 @@ namespace Kursova
         {
             //read dir and search for offset and delete it
             Stream.Position = parentOffset + parentNameLength + 1;
-            while (Stream.Position < objOffset + (SectorSize - parentNameLength - 9))
+            while (Stream.Position < objOffset + (_sectorSize - parentNameLength - 9))
             {
                 var currBytes = Br.ReadBytes(8);
                 var value = BitConverter.ToInt64(currBytes , 0);
@@ -251,7 +249,7 @@ namespace Kursova
         {
             if (fileName == null) return;
 
-            var writeOffsets = Bitmap.FindFreeSectors(Br, requiredSectors, (int)BitmapSectors, (int)SectorSize);
+            var writeOffsets = Bitmap.FindFreeSectors(Br, requiredSectors, (int)BitmapSectors, (int)_sectorSize);
             var strings = SplitString(fileContents, fileName.Length, requiredSectors);
             Stream.Position = writeOffsets[0];
             Bw.Write(true);
@@ -269,7 +267,7 @@ namespace Kursova
                 Stream.Position = writeOffsets[i + 1];
             }
             //special value for end of last sector
-            Stream.Position = writeOffsets[^2] + SectorSize - 8;
+            Stream.Position = writeOffsets[^2] + _sectorSize - 8;
             Bw.Write((long)-1);
 
             UpdateDir(writeOffsets[0], MainForm.CWD);
@@ -283,7 +281,7 @@ namespace Kursova
             var firstPart = "";
             var indx = 0;
             int i;
-            for (i = 0; i < SectorSize - nameSize - 9; i++)
+            for (i = 0; i < _sectorSize - nameSize - 9; i++)
                 firstPart += str[i];
             strs[indx++] = firstPart;
 
@@ -292,7 +290,7 @@ namespace Kursova
             {
                 strs[indx] += str[i];
                 counter++;
-                if (counter == SectorSize - 8)
+                if (counter == _sectorSize - 8)
                 {
                     indx++;
                     counter = 0;
@@ -301,11 +299,11 @@ namespace Kursova
             return strs;
         }
 
-        private static void UpdateDir(long fileOffset, TreeNode CWD)
+        private static void UpdateDir(long fileOffset, TreeNode cwd)
         {
-            Stream.Position = (long)CWD.Tag + CWD.Text.Length + 1;
+            Stream.Position = (long)cwd.Tag + cwd.Text.Length + 1;
             var freeBytesOffset = -1;
-            for (var i = 0; i < 63; i++)//512/8 = 64(8 bytes per offset) - 1 byte for end of file/dir value
+            for (var i = 0; i < _sectorSize/8 - 1; i++)//8 bytes per offset - 1 byte for end of file/dir value
             {
                 var bytes = Br.ReadBytes(8);
                 if (BitConverter.ToInt64(bytes , 0) != 0)
@@ -319,7 +317,7 @@ namespace Kursova
         private static void UpdateBitmap()
         {
             Stream.Position = 0;
-            Bitmap.UpdateBitmap(new BinaryReader(Stream), (int)SectorSize, (int)BitmapSectors, (int)SectorCount);
+            Bitmap.UpdateBitmap(new BinaryReader(Stream), (int)_sectorSize, (int)BitmapSectors, (int)_sectorCount);
         }
 
         private static string MyToString(char[] chars)

@@ -1,7 +1,3 @@
-using System.Reflection.Metadata.Ecma335;
-using System.Text;
-using System.Windows.Forms;
-
 namespace Kursova.Forms
 {
     public partial class MainForm : Form
@@ -9,9 +5,6 @@ namespace Kursova.Forms
         private static readonly TreeNode RootNode = new("Root");
         internal static TreeNode CWD { get; private set; } = RootNode;
         internal static TreeNode? FileToInteract { get; private set; }
-
-
-
         public MainForm() => InitializeComponent();
 
         public static void AddTreeviewNodes(string name, long offset, bool isFile)
@@ -24,9 +17,19 @@ namespace Kursova.Forms
 
         public static void DeleteNode(TreeNode node) => node.Remove();
 
-        //public static TreeNode GetSelectedNode() => treeView.SelectedNode;
-
         private void MainForm_Load(object sender, EventArgs e)
+        {
+            CreateFileBtn.Visible = false;
+            CreateDirBtn.Visible = false;
+            DeleteBtn.Visible = false;
+            ViewBtn.Visible = false;
+            EditBtn.Visible = false;
+            ExportBtn.Visible = false;
+            ImportBtn.Visible = false;
+            treeView.Visible = false;
+        }
+
+        private void InitRoot()
         {
             treeView.Nodes.Add(RootNode);
             RootNode.ForeColor = Color.Red;
@@ -122,6 +125,7 @@ namespace Kursova.Forms
                 catch (Exception ex)
                 {
                     MessageBox.Show("Error: Could not read file from disk. Original error: " + ex.Message);
+                    return;
                 }
                 FileSystem.CreateFile(MyGetNameWithoutExtension(path), contents);
             }
@@ -143,6 +147,25 @@ namespace Kursova.Forms
                 name += path[i];
             }
             return name;
+        }
+
+        private void StartBtn_Click(object sender, EventArgs e)
+        {
+            var initForm = new StartingParameters();
+            initForm.ShowDialog();
+            if (initForm.GetSectorSize() == 0 || initForm.GetSectorCount() == 0)
+                return;
+            FileSystem.Initiate(initForm.GetSectorSize(), initForm.GetSectorCount());
+            InitRoot();
+            CreateFileBtn.Visible = true;
+            CreateDirBtn.Visible = true;
+            DeleteBtn.Visible = true;
+            ViewBtn.Visible = true;
+            EditBtn.Visible = true;
+            ExportBtn.Visible = true;
+            ImportBtn.Visible = true;
+            treeView.Visible = true;
+            StartBtn.Visible = false;
         }
     }
 }

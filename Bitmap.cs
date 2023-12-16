@@ -15,7 +15,7 @@ namespace Kursova
             for (var i = 0; i < bitmapSectors; i++)
                 bitArr[i] = true;
 
-            br.BaseStream.Position = bitmapSectors * sectorSize + 2;//raises weird error sometimes
+            br.BaseStream.Position = bitmapSectors * sectorSize + 1;//raises weird error sometimes
             for (var i = bitmapSectors; i < sectorCount; i++)
             {
                 var tmp = br.ReadChar();//first char of file/dir name
