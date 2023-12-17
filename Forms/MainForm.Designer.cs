@@ -69,6 +69,7 @@
             treeView.Size = new Size(265, 426);
             treeView.TabIndex = 4;
             treeView.AfterSelect += TreeView_AfterSelect;
+            treeView.MouseMove += treeView_MouseMove;
             // 
             // EditBtn
             // 

@@ -1,3 +1,5 @@
+using System.Reflection.Metadata.Ecma335;
+
 namespace Kursova.Forms
 {
     public partial class MainForm : Form
@@ -5,12 +7,17 @@ namespace Kursova.Forms
         private static readonly TreeNode RootNode = new("Root");
         internal static TreeNode CWD { get; private set; } = RootNode;
         internal static TreeNode? FileToInteract { get; private set; }
+
+        internal static readonly Color DirColor = Color.Blue;
+        internal static readonly Color FileColor = Color.Green;
+        internal static readonly Color BadObjColor = Color.Red;
+
         public MainForm() => InitializeComponent();
 
         public static void AddTreeviewNodes(string name, long offset, bool isFile)
         {
             //create node from file info
-            var node = new TreeNode(name) { ForeColor = isFile ? Color.Green : Color.Red, Tag = offset };
+            var node = new TreeNode(name) { ForeColor = isFile ? FileColor : DirColor, Tag = offset };
             //add to CWD in treeview
             CWD.Nodes.Add(node);
         }
@@ -32,7 +39,7 @@ namespace Kursova.Forms
         private void InitRoot()
         {
             treeView.Nodes.Add(RootNode);
-            RootNode.ForeColor = Color.Red;
+            RootNode.ForeColor = DirColor;
             RootNode.Tag = FileSystem.GetRootOffset();
         }
 
@@ -51,9 +58,19 @@ namespace Kursova.Forms
         private void ViewBtn_Click(object sender, EventArgs e)
         {
             if (FileToInteract == null) return;
+            if (FileToInteract.ForeColor == Color.Red)
+            {
+                MessageBox.Show("Error: Object is corrupted");
+                return;
+            }
 
             var objActionsForm = new ObjActionsForm(true, false, true);
             var fileInfo = FileSystem.ReadFile((long)FileToInteract.Tag, FileToInteract.Text);
+            if (fileInfo == null)
+            {
+                FileToInteract.ForeColor = BadObjColor;
+                return;
+            }
             objActionsForm.SetFileContents(fileInfo);
             objActionsForm.ShowDialog();
         }
@@ -68,9 +85,19 @@ namespace Kursova.Forms
         private void EditBtn_Click(object sender, EventArgs e)
         {
             if (FileToInteract == null) return;
+            if (FileToInteract.ForeColor == Color.Red)
+            {
+                MessageBox.Show("Error: Object is corrupted");
+                return;
+            }
 
             var objActionsForm = new ObjActionsForm(true, true, false);
             var fileInfo = FileSystem.ReadFile((long)FileToInteract.Tag, FileToInteract.Text);
+            if (fileInfo == null)
+            {
+                FileToInteract.ForeColor = BadObjColor;
+                return;
+            }
             objActionsForm.SetFileContents(fileInfo);
             objActionsForm.ShowDialog();
         }
@@ -78,18 +105,33 @@ namespace Kursova.Forms
         private void TreeView_AfterSelect(object sender, TreeViewEventArgs e)
         {
             var currNode = treeView.SelectedNode;
-            if (currNode.ForeColor == Color.Red)//Red == Directory
+            if (currNode.ForeColor == BadObjColor)
+                return;
+            if (currNode.ForeColor == DirColor)//Red == Directory
             {
                 CWD = currNode;
                 FileToInteract = null;
             }
-            else //if (currNode.ForeColor == Color.Green)//Green == File
+            else //if (currNode.ForeColor == fileColor)//Green == File
                 FileToInteract = currNode;
+        }
+
+        private void treeView_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (CWD.ForeColor == BadObjColor)
+            {
+                CWD.Collapse();
+            }
         }
 
         private void ExportBtn_Click(object sender, EventArgs e)
         {
             if (FileToInteract == null) return;
+            if (FileToInteract.ForeColor == Color.Red)
+            {
+                MessageBox.Show("Error: Object is corrupted");
+                return;
+            }
 
             var svFileDialog = new SaveFileDialog();
             svFileDialog.Filter = "txt files (*.txt)|*.txt";

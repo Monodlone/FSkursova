@@ -20,14 +20,14 @@
         {
             if (info[0] == null || info[1] == null) return;
 
-            nameTextbox.Text = info[0];
+            nameTxtBox.Text = info[0];
             contentsTextbox.Text = info[1];
         }
 
         private void CreateBtn_Click(object sender, EventArgs e)
         {
             EditBtn.Visible = false;
-            FileName = nameTextbox.Text;
+            FileName = nameTxtBox.Text;
             FileContents = contentsTextbox.Text;
             Close();
             if (IsFile)
@@ -39,7 +39,7 @@
         private void EditBtn_Click(object sender, EventArgs e)
         {
             FileSystem.DeleteObject(MainForm.FileToInteract);
-            FileName = nameTextbox.Text;
+            FileName = nameTxtBox.Text;
             FileContents = contentsTextbox.Text;
             Close();
             FileSystem.CreateFile(FileName, FileContents);
@@ -59,7 +59,16 @@
             EditBtn.Visible = !IsViewing;
             CreateBtn.Visible = !IsViewing;
             contentsTextbox.ReadOnly = IsViewing;
-            nameTextbox.ReadOnly = IsViewing;
+            nameTxtBox.ReadOnly = IsViewing;
+        }
+
+        private void nameTxtBox_KeyPress(object sender, KeyPressEventArgs e) => e.Handled = !IsValidCharacter(e.KeyChar);
+
+        private bool IsValidCharacter(char ch)
+        {
+            var lower = ch >= 'a' && ch <= 'z';
+            var upper = ch >= 'A' && ch <= 'Z';
+            return lower || upper || ch == 8;//backspace
         }
     }
 }

@@ -28,22 +28,14 @@
         /// </summary>
         private void InitializeComponent()
         {
-            nameTextbox = new TextBox();
             nameLbl = new Label();
             contentsTextbox = new TextBox();
             contentsLbl = new Label();
             CreateBtn = new Button();
             extensionLbl = new Label();
             EditBtn = new Button();
+            nameTxtBox = new TextBox();
             SuspendLayout();
-            // 
-            // nameTextbox
-            // 
-            nameTextbox.Location = new Point(95, 23);
-            nameTextbox.MaxLength = 28;
-            nameTextbox.Name = "nameTextbox";
-            nameTextbox.Size = new Size(121, 23);
-            nameTextbox.TabIndex = 0;
             // 
             // nameLbl
             // 
@@ -105,18 +97,26 @@
             EditBtn.UseVisualStyleBackColor = true;
             EditBtn.Click += EditBtn_Click;
             // 
+            // nameTxtBox
+            // 
+            nameTxtBox.Location = new Point(104, 23);
+            nameTxtBox.Name = "nameTxtBox";
+            nameTxtBox.Size = new Size(121, 23);
+            nameTxtBox.TabIndex = 8;
+            nameTxtBox.KeyPress += nameTxtBox_KeyPress;
+            // 
             // ObjActionsForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(450, 397);
+            Controls.Add(nameTxtBox);
             Controls.Add(EditBtn);
             Controls.Add(extensionLbl);
             Controls.Add(CreateBtn);
             Controls.Add(contentsLbl);
             Controls.Add(contentsTextbox);
             Controls.Add(nameLbl);
-            Controls.Add(nameTextbox);
             Name = "ObjActionsForm";
             Text = "Create";
             Load += ObjActionsForm_Load;
@@ -125,13 +125,12 @@
         }
 
         #endregion
-
-        private TextBox nameTextbox;
         private Label nameLbl;
         private TextBox contentsTextbox;
         private Label contentsLbl;
         private Button CreateBtn;
         private Label extensionLbl;
         private Button EditBtn;
+        private TextBox nameTxtBox;
     }
 }
