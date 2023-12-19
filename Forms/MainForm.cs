@@ -12,6 +12,26 @@ namespace Kursova.Forms
 
         public MainForm() => InitializeComponent();
 
+        private void MainForm_Load(object sender, EventArgs e)
+        {
+            CreateFileBtn.Visible = false;
+            CreateDirBtn.Visible = false;
+            DeleteBtn.Visible = false;
+            ViewBtn.Visible = false;
+            EditBtn.Visible = false;
+            ExportBtn.Visible = false;
+            ImportBtn.Visible = false;
+            treeView.Visible = false;
+            RestoreBtn.Visible = false;
+        }
+
+        private void InitRoot()
+        {
+            treeView.Nodes.Add(RootNode);
+            RootNode.ForeColor = DirColor;
+            RootNode.Tag = FileSystem.GetRootOffset();
+        }
+
         public static void AddTreeviewNodes(string name, long offset, bool isFile)
         {
             //create node from file info
@@ -24,23 +44,36 @@ namespace Kursova.Forms
 
         internal static void ChangeToRootWhenCwdBad() => CWD = RootNode;
 
-        private void MainForm_Load(object sender, EventArgs e)
+        private void TreeView_AfterSelect(object sender, TreeViewEventArgs e)
         {
-            CreateFileBtn.Visible = false;
-            CreateDirBtn.Visible = false;
-            DeleteBtn.Visible = false;
-            ViewBtn.Visible = false;
-            EditBtn.Visible = false;
-            ExportBtn.Visible = false;
-            ImportBtn.Visible = false;
-            treeView.Visible = false;
+            var currNode = treeView.SelectedNode;
+            if (currNode.ForeColor == BadObjColor)
+                return;
+            if (currNode.ForeColor == DirColor)//Red == Directory
+            {
+                CWD = currNode;
+                FileToInteract = null;
+            }
+            else //if (currNode.ForeColor == fileColor)//Green == File
+                FileToInteract = currNode;
         }
 
-        private void InitRoot()
+        private static string MyGetNameWithoutExtension(string path)
         {
-            treeView.Nodes.Add(RootNode);
-            RootNode.ForeColor = DirColor;
-            RootNode.Tag = FileSystem.GetRootOffset();
+            //C:\Users\PiwKi\Desktop\asd.txt
+            var name = "";
+            var lastIndex = -1;
+            for (var i = 0; i < path.Length; i++)
+                if (path[i] == '\\')
+                    lastIndex = i + 1;
+
+            for (var i = lastIndex; i < path.Length; i++)
+            {
+                if (path[i] == '.')
+                    break;
+                name += path[i];
+            }
+            return name;
         }
 
         private void CreateFileBtn_Click(object sender, EventArgs e)
@@ -102,30 +135,6 @@ namespace Kursova.Forms
             objActionsForm.ShowDialog();
         }
 
-        private void TreeView_AfterSelect(object sender, TreeViewEventArgs e)
-        {
-            var currNode = treeView.SelectedNode;
-            if (currNode.ForeColor == BadObjColor)
-                return;
-            if (currNode.ForeColor == DirColor)//Red == Directory
-            {
-                CWD = currNode;
-                FileToInteract = null;
-            }
-            else //if (currNode.ForeColor == fileColor)//Green == File
-                FileToInteract = currNode;
-        }
-
-        private void treeView_MouseMove(object sender, MouseEventArgs e)
-        {
-            if (CWD.ForeColor == BadObjColor)
-                CWD.Collapse();
-            if (RootNode.ForeColor == BadObjColor)
-            {
-                MessageBox.Show("Fatal error: Root is corrupted");
-                throw new ArgumentException("Fatal error: Root is corrupted");
-            }
-        }
 
         private void ExportBtn_Click(object sender, EventArgs e)
         {
@@ -176,24 +185,6 @@ namespace Kursova.Forms
             }
         }
 
-        private string MyGetNameWithoutExtension(string path)
-        {
-            //C:\Users\PiwKi\Desktop\asd.txt
-            var name = "";
-            var lastIndex = -1;
-            for (var i = 0; i < path.Length; i++)
-                if (path[i] == '\\')
-                    lastIndex = i + 1;
-
-            for (var i = lastIndex; i < path.Length; i++)
-            {
-                if (path[i] == '.')
-                    break;
-                name += path[i];
-            }
-            return name;
-        }
-
         private void StartBtn_Click(object sender, EventArgs e)
         {
             var initForm = new StartingParameters();
@@ -210,7 +201,19 @@ namespace Kursova.Forms
             ExportBtn.Visible = true;
             ImportBtn.Visible = true;
             treeView.Visible = true;
+            RestoreBtn.Visible = false;
             StartBtn.Visible = false;
+        }
+
+        private void treeView_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (CWD.ForeColor == BadObjColor)
+                CWD.Collapse();
+            if (RootNode.ForeColor == BadObjColor)
+            {
+                MessageBox.Show("Fatal error: Root is corrupted");
+                throw new ArgumentException("Fatal error: Root is corrupted");
+            }
         }
     }
 }

@@ -13,7 +13,7 @@ namespace Kursova
         //ParityCheck works only sometimes lmao
 
         //TODO ForImplementing LIST:
-        //TODO Be able to restore the file system after quiting the program
+        //TODO Be able to restore the previous file system when starting the program (bonus feature)
 
         private static readonly FileStream Stream = File.Create("C:\\Users\\PiwKi\\Desktop\\fs_file");
         private static readonly BinaryWriter Bw = new(Stream, Encoding.UTF8, true);

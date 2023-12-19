@@ -141,9 +141,9 @@
             // RestoreBtn
             // 
             RestoreBtn.Font = new Font("Segoe UI", 10F);
-            RestoreBtn.Location = new Point(283, 392);
+            RestoreBtn.Location = new Point(251, 322);
             RestoreBtn.Name = "RestoreBtn";
-            RestoreBtn.Size = new Size(119, 46);
+            RestoreBtn.Size = new Size(123, 57);
             RestoreBtn.TabIndex = 11;
             RestoreBtn.Text = "Restore FS from previous session";
             RestoreBtn.UseVisualStyleBackColor = true;
