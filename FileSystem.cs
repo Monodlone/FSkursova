@@ -10,7 +10,6 @@ namespace Kursova
         //can't delete file if it's larger than 16 sectors
         //can't edit directories (maybe make it so the new name can't be longer than the old one)
         //if there are dirs in CWD -> to delete CWD you need to delete the dirs inside first
-        //TODO for dirs check dir before adding file, if error mark dir as unusable and write file to root instead
         //ParityCheck for files works sometimes and for dirs even less
 
         //TODO ForImplementing LIST:
