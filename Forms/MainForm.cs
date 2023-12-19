@@ -4,7 +4,7 @@ namespace Kursova.Forms
 {
     public partial class MainForm : Form
     {
-        private static readonly TreeNode RootNode = new("Root");
+        internal static readonly TreeNode RootNode = new("Root");
         internal static TreeNode CWD { get; private set; } = RootNode;
         internal static TreeNode? FileToInteract { get; private set; }
 
@@ -23,6 +23,11 @@ namespace Kursova.Forms
         }
 
         public static void DeleteNode(TreeNode node) => node.Remove();
+
+        internal static void ChangeToRootWhenCwdBad()
+        {
+            CWD = RootNode;
+        }
 
         private void MainForm_Load(object sender, EventArgs e)
         {
@@ -119,9 +124,7 @@ namespace Kursova.Forms
         private void treeView_MouseMove(object sender, MouseEventArgs e)
         {
             if (CWD.ForeColor == BadObjColor)
-            {
                 CWD.Collapse();
-            }
         }
 
         private void ExportBtn_Click(object sender, EventArgs e)

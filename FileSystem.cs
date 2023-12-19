@@ -10,10 +10,12 @@ namespace Kursova
         //can't delete file if it's larger than 16 sectors
         //can't edit directories (maybe make it so the new name can't be longer than the old one)
         //if there are dirs in CWD -> to delete CWD you need to delete the dirs inside first
-        //ParityCheck works only sometimes and only for files.
         //TODO for dirs check dir before adding file, if error mark dir as unusable and write file to root instead
+        //ParityCheck for files works sometimes and for dirs even less
 
         //TODO ForImplementing LIST:
+        //TODO make parity for dir too
+        //TODO Be able to restore the file system after quiting the program
 
         private static readonly FileStream Stream = File.Create("C:\\Users\\PiwKi\\Desktop\\fs_file");
         private static readonly BinaryWriter Bw = new(Stream, Encoding.UTF8, true);
@@ -91,6 +93,10 @@ namespace Kursova
                 ParityCheck.WriteParityBit(writeOffset, _sectorSize);
                 UpdateDir(writeOffset, MainForm.CWD);
                 UpdateBitmap();
+
+                if (MainForm.CWD.ForeColor == MainForm.BadObjColor)
+                    MainForm.ChangeToRootWhenCwdBad();
+
                 MainForm.AddTreeviewNodes(fileName, writeOffset, true);
             }
         }
@@ -111,17 +117,18 @@ namespace Kursova
             Stream.Position = writeOffset + _sectorSize - sizeof(long);
             Bw.Write((long)-1);
 
+            ParityCheck.WriteParityBit(writeOffset, _sectorSize);
             UpdateBitmap();
             MainForm.AddTreeviewNodes(dirName, writeOffset, false);
         }
 
-        internal static FileStream GetFileStream() => Stream;
+        internal static FileStream GetStream() => Stream;
 
         internal static long GetRootOffset() => RootOffset;
 
         internal static string[] ReadFile(long offset, string fileName)
         {
-            if (!ParityCheck.CheckFileIntegrity(offset, _sectorSize))
+            if (!ParityCheck.CheckSectorIntegrity(offset, _sectorSize))
                 return null;
 
             var info = new string[2];
@@ -314,6 +321,12 @@ namespace Kursova
 
         private static void UpdateDir(long fileOffset, TreeNode cwd)
         {
+            if (!ParityCheck.CheckSectorIntegrity((long)cwd.Tag, _sectorSize))
+            {
+                cwd.ForeColor = MainForm.BadObjColor;
+                cwd = MainForm.RootNode;
+            }
+
             Stream.Position = (long)cwd.Tag + cwd.Text.Length + 1; 
             for (var i = 0; i < _sectorSize/sizeof(long) - sizeof(long); i++)//8 bytes per offset - 1 byte for end of file/dir value
             {
@@ -324,6 +337,7 @@ namespace Kursova
             }
             Stream.Position -= sizeof(long);
             Bw.Write(fileOffset);
+            ParityCheck.WriteParityBit((long)cwd.Tag, _sectorSize);
         }
         
         private static void UpdateBitmap()

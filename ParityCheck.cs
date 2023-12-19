@@ -4,13 +4,13 @@ namespace Kursova
 {
     //TODO even parity check
     //end of every data sector have a parity bit
-    //when reading first CheckFileIntegrity 
+    //when reading first CheckSectorIntegrity 
     //when false -> don't read file -> mark as bad file with BadObjColor
     internal static class ParityCheck
     {
         internal static void WriteParityBit(long offset, long sectorSize)
         {
-            var stream = FileSystem.GetFileStream();
+            var stream = FileSystem.GetStream();
             var bw = new BinaryWriter(stream, Encoding.UTF8);
             var br = new BinaryReader(stream, Encoding.UTF8);
 
@@ -18,14 +18,14 @@ namespace Kursova
             var data = br.ReadBytes((int)sectorSize);
             var parityBit = CalculateEvenParityBit(data);
 
-            stream.Position = offset + (sectorSize - 1 - sizeof(long));
-            var b = (byte)parityBit;
+            stream.Position -= (sizeof(long) + 1);
+            var b = (byte)parityBit;//for debugging
             bw.Write(b);
         }
 
-        internal static bool CheckFileIntegrity(long fileOffset, long sectorSize)
+        internal static bool CheckSectorIntegrity(long fileOffset, long sectorSize)
         {
-            var stream = FileSystem.GetFileStream();
+            var stream = FileSystem.GetStream();
             stream.Position = fileOffset;
             var br = new BinaryReader(stream, Encoding.UTF8);
 

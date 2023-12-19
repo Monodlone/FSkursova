@@ -26,7 +26,7 @@ namespace Kursova
                 br.BaseStream.Position += sectorSize - 1;
             }
 
-            WriteBitmap(bitArr, new BinaryWriter(FileSystem.GetFileStream()));
+            WriteBitmap(bitArr, new BinaryWriter(FileSystem.GetStream()));
         }
 
         internal static long FindFreeSector(BinaryReader br, int bitmapSectors, int sectorSize)
