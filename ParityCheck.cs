@@ -23,26 +23,37 @@ namespace Kursova
             bw.Write(b);
         }
 
-        internal static bool CheckSectorIntegrity(long fileOffset, long sectorSize)
+        internal static bool CheckSectorIntegrity(long offset, long sectorSize)
         {
             var stream = FileSystem.GetStream();
-            stream.Position = fileOffset;
+            stream.Position = offset;
             var br = new BinaryReader(stream, Encoding.UTF8);
 
-            while (fileOffset != -1)
+            while (offset != -1)
             {
                 var data = br.ReadBytes((int)sectorSize);
                 if (!CheckEvenParity(data))
                     return false;
                 stream.Position -= sizeof(long);
                 var next = br.ReadBytes(sizeof(long));
-                fileOffset = BitConverter.ToInt64(next , 0);
-                if (fileOffset == -1)
+                offset = BitConverter.ToInt64(next , 0);
+                if (offset == -1)
                     break;
-                stream.Position = fileOffset;
+                stream.Position = offset;
             }
             return true;
         }
+
+        internal static void UpdateParityBitOfCWD(long offset, long sectorSize)
+        {
+            var stream = FileSystem.GetStream();
+            stream.Position = offset + (sectorSize - 1 - sizeof(long));
+            var bw = new BinaryWriter(stream, Encoding.UTF8);
+            bw.Write((byte)0);
+
+            WriteParityBit(offset, sectorSize);
+        }
+
         //0 if even num of true bits, 1 otherwise
         private static bool CheckEvenParity(byte[] data) => CalculateEvenParityBit(data) == 0;
 

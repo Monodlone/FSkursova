@@ -233,8 +233,8 @@ namespace Kursova
         private static bool IsDirEmpty(long offset, int nameLength)
         {
             Stream.Position = offset + nameLength + 1;
-            //stream is between name and end of sector value
-            while (Stream.Position < offset + (_sectorSize - nameLength - 9))
+            //stream is between name and parity bit
+            while (Stream.Position < offset + (_sectorSize - nameLength - 1 - sizeof(long)))
             {
                 var currBytes = Br.ReadBytes(sizeof(long));
                 var value = BitConverter.ToInt64(currBytes , 0);
@@ -260,6 +260,7 @@ namespace Kursova
                     Bw.Write((long)0);
                 }
             }
+            ParityCheck.UpdateParityBitOfCWD(parentOffset, _sectorSize);
         }
 
         private static void WriteLongFile(string? fileName, string fileContents, int requiredSectors)
@@ -323,8 +324,13 @@ namespace Kursova
             {
                 cwd.ForeColor = MainForm.BadObjColor;
                 cwd = MainForm.RootNode;
+                //check root too before continuing
+                if (!ParityCheck.CheckSectorIntegrity((long)cwd.Tag, _sectorSize))
+                {
+                    MessageBox.Show("Fatal Error: Root is corrupted");
+                    throw new ArgumentException("Fatal Error: Root is corrupted");
+                }
             }
-
             Stream.Position = (long)cwd.Tag + cwd.Text.Length + 1; 
             for (var i = 0; i < _sectorSize/sizeof(long) - sizeof(long); i++)//8 bytes per offset - 1 byte for end of file/dir value
             {
@@ -335,7 +341,8 @@ namespace Kursova
             }
             Stream.Position -= sizeof(long);
             Bw.Write(fileOffset);
-            ParityCheck.WriteParityBit((long)cwd.Tag, _sectorSize);
+            //delete old parity bit then calculate and write new one
+            ParityCheck.UpdateParityBitOfCWD((long)cwd.Tag, _sectorSize);
         }
         
         private static void UpdateBitmap()
