@@ -1,16 +1,14 @@
-using System.Reflection.Metadata.Ecma335;
-
 namespace Kursova.Forms
 {
     public partial class MainForm : Form
     {
-        internal static readonly TreeNode RootNode = new("Root");
+        internal static TreeNode RootNode { get; } = new("Root");
         internal static TreeNode CWD { get; private set; } = RootNode;
         internal static TreeNode? FileToInteract { get; private set; }
 
-        internal static readonly Color DirColor = Color.Blue;
         internal static readonly Color FileColor = Color.Green;
         internal static readonly Color BadObjColor = Color.Red;
+        private static readonly Color DirColor = Color.Blue;
 
         public MainForm() => InitializeComponent();
 
@@ -24,10 +22,7 @@ namespace Kursova.Forms
 
         public static void DeleteNode(TreeNode node) => node.Remove();
 
-        internal static void ChangeToRootWhenCwdBad()
-        {
-            CWD = RootNode;
-        }
+        internal static void ChangeToRootWhenCwdBad() => CWD = RootNode;
 
         private void MainForm_Load(object sender, EventArgs e)
         {
@@ -125,6 +120,11 @@ namespace Kursova.Forms
         {
             if (CWD.ForeColor == BadObjColor)
                 CWD.Collapse();
+            if (RootNode.ForeColor == BadObjColor)
+            {
+                MessageBox.Show("Fatal error: Root is corrupted");
+                throw new ArgumentException("Fatal error: Root is corrupted");
+            }
         }
 
         private void ExportBtn_Click(object sender, EventArgs e)

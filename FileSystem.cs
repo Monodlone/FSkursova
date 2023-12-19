@@ -10,10 +10,9 @@ namespace Kursova
         //can't delete file if it's larger than 16 sectors
         //can't edit directories (maybe make it so the new name can't be longer than the old one)
         //if there are dirs in CWD -> to delete CWD you need to delete the dirs inside first
-        //ParityCheck for files works sometimes and for dirs even less
+        //ParityCheck works only sometimes lmao
 
         //TODO ForImplementing LIST:
-        //TODO make parity for dir too
         //TODO Be able to restore the file system after quiting the program
 
         private static readonly FileStream Stream = File.Create("C:\\Users\\PiwKi\\Desktop\\fs_file");

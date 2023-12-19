@@ -37,6 +37,7 @@
             ExportBtn = new Button();
             ViewBtn = new Button();
             StartBtn = new Button();
+            RestoreBtn = new Button();
             SuspendLayout();
             // 
             // CreateFileBtn
@@ -137,11 +138,22 @@
             StartBtn.UseVisualStyleBackColor = true;
             StartBtn.Click += StartBtn_Click;
             // 
+            // RestoreBtn
+            // 
+            RestoreBtn.Font = new Font("Segoe UI", 10F);
+            RestoreBtn.Location = new Point(283, 392);
+            RestoreBtn.Name = "RestoreBtn";
+            RestoreBtn.Size = new Size(119, 46);
+            RestoreBtn.TabIndex = 11;
+            RestoreBtn.Text = "Restore FS from previous session";
+            RestoreBtn.UseVisualStyleBackColor = true;
+            // 
             // MainForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(414, 450);
+            Controls.Add(RestoreBtn);
             Controls.Add(StartBtn);
             Controls.Add(ViewBtn);
             Controls.Add(ExportBtn);
@@ -167,5 +179,6 @@
         private Button ExportBtn;
         private Button ViewBtn;
         private Button StartBtn;
+        private Button RestoreBtn;
     }
 }
