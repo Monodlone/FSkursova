@@ -157,8 +157,11 @@ namespace Kursova
         {
             if (obj == null) return;
             var objOffset = (long)obj.Tag;
+            Stream.Position = objOffset;
             //File
-            if (obj.ForeColor == MainForm.FileColor || obj.ForeColor == MainForm.BadObjColor)
+            if (obj.ForeColor == MainForm.FileColor ||
+                //dirs can have BadObjColor too so read first byte to make sure it's a file
+                (obj.ForeColor == MainForm.BadObjColor && Br.ReadByte() == 1))
             {
                 DeleteFile(objOffset, (long)obj.Parent.Tag, obj.Parent.Text.Length);
                 MainForm.DeleteNode(obj);
@@ -174,6 +177,7 @@ namespace Kursova
                     Stream.Position = objOffset;
                     for (var i = 0; i < nameLength; i += sizeof(long))
                         Bw.Write((long)0);//long because 8bytes at a time -> fewer cycles
+
                     //clear end of sector value
                     Stream.Position = objOffset + _sectorSize - sizeof(long);
                     Bw.Write((long)0);
@@ -182,13 +186,16 @@ namespace Kursova
                 //not empty -> run DeleteFile with all offsets from directory
                 else
                 {
-                    var currFileOffset = objOffset + nameLength + 1;
-                    while (currFileOffset != 0)
+                    var currPosition = objOffset + 1 + nameLength;
+                    while (true)
                     {
-                        Stream.Position = currFileOffset;
+                        Stream.Position = currPosition;
                         var bytes = Br.ReadBytes(sizeof(long));
-                        currFileOffset = BitConverter.ToInt64(bytes , 0);
-                        DeleteFile(currFileOffset, (long)obj.Parent.Tag, obj.Parent.Text.Length);
+                        var fileOffset = BitConverter.ToInt64(bytes , 0);
+                        if (fileOffset == 0)
+                            break;
+                        DeleteFile(fileOffset, (long)obj.Parent.Tag, obj.Parent.Text.Length);
+                        currPosition += 8;
                     }
                     //delete dir
                     Stream.Position = objOffset;
