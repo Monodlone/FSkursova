@@ -43,6 +43,7 @@ namespace Kursova.Forms
         public static void DeleteNode(TreeNode node) => node.Remove();
 
         internal static void ChangeToRootWhenCwdBad() => CWD = RootNode;
+        internal static void ChangeCWDForFileEditing(TreeNode fileParent) => CWD = fileParent;
 
         private void TreeView_AfterSelect(object sender, TreeViewEventArgs e)
         {
