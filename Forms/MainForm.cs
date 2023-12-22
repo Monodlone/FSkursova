@@ -154,8 +154,8 @@ namespace Kursova.Forms
                 using var fileStream = new FileStream(svFileDialog.FileName, FileMode.Create);
                 try
                 {
-                    using (var sw = new StreamWriter(fileStream))
-                        sw.Write(info?[1]);
+                    using var sw = new StreamWriter(fileStream);
+                    sw.Write(info[1]);
                 }
                 catch (Exception ex)
                 {
@@ -208,8 +208,14 @@ namespace Kursova.Forms
 
         private void treeView_MouseMove(object sender, MouseEventArgs e)
         {
+            RootNode.Expand();
+            //keep last selected node highlighted
+            if(treeView.SelectedNode != null)
+                treeView.SelectedNode.Checked = true;
+            //keep bad directory collapsed
             if (CWD.ForeColor == BadObjColor)
                 CWD.Collapse();
+
             if (RootNode.ForeColor == BadObjColor)
             {
                 MessageBox.Show("Fatal error: Root is corrupted");

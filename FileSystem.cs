@@ -13,7 +13,7 @@ namespace Kursova
         //ParityCheck works only sometimes lmao
 
         //TODO ForImplementing LIST:
-        //TODO Be able to restore the previous file system when starting the program (bonus feature)
+        //TODO (bonus feature) Be able to restore the previous file system when starting the program
 
         private static readonly FileStream Stream = File.Create("C:\\Users\\PiwKi\\Desktop\\fs_file");
         private static readonly BinaryWriter Bw = new(Stream, Encoding.UTF8, true);
@@ -164,6 +164,7 @@ namespace Kursova
                 (obj.ForeColor == MainForm.BadObjColor && Br.ReadByte() == 1))
             {
                 DeleteFile(objOffset, (long)obj.Parent.Tag, obj.Parent.Text.Length);
+                UpdateBitmap();
                 MainForm.DeleteNode(obj);
             }
             //Directory
@@ -203,9 +204,9 @@ namespace Kursova
                         Bw.Write((long)0);
                     CleanParentDir(objOffset, (long)obj.Parent.Tag, obj.Parent.Text.Length);
                 }
+                UpdateBitmap();
                 MainForm.DeleteNode(obj);
             }
-            UpdateBitmap();
         }
 
         private static void DeleteFile(long fileOffset, long parentOffset, int parentNameLength)

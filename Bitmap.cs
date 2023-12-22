@@ -25,7 +25,6 @@ namespace Kursova
                     bitArr[i] = false;//free sector
                 br.BaseStream.Position += sectorSize - 1;
             }
-
             WriteBitmap(bitArr, new BinaryWriter(FileSystem.GetStream()));
         }
 

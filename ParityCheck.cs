@@ -26,8 +26,8 @@ namespace Kursova
         internal static bool CheckSectorIntegrity(long offset, long sectorSize)
         {
             var stream = FileSystem.GetStream();
-            stream.Position = offset;
             var br = new BinaryReader(stream, Encoding.UTF8);
+            stream.Position = offset;
 
             while (offset != -1)
             {
