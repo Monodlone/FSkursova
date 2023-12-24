@@ -297,6 +297,7 @@ namespace Kursova
             Stream.Position = writeOffsets[^1] + _sectorSize - sizeof(long);
             Bw.Write((long)-1);
 
+            ParityCheck.WriteParityBit(writeOffsets[^1], _sectorSize);
             UpdateDir(writeOffsets[0], MainForm.CWD);
             UpdateBitmap();
             MainForm.AddTreeviewNodes(fileName, writeOffsets[0], true);

@@ -11,22 +11,21 @@ namespace Kursova
         internal static void WriteParityBit(long offset, long sectorSize)
         {
             var stream = FileSystem.GetStream();
-            var bw = new BinaryWriter(stream, Encoding.UTF8);
-            var br = new BinaryReader(stream, Encoding.UTF8);
+            var bw = new BinaryWriter(stream);
+            var br = new BinaryReader(stream);
 
             stream.Position = offset;
             var data = br.ReadBytes((int)sectorSize);
             var parityBit = CalculateEvenParityBit(data);
 
             stream.Position -= (sizeof(long) + 1);
-            var b = (byte)parityBit;//for debugging
-            bw.Write(b);
+            bw.Write((byte)parityBit);
         }
 
         internal static bool CheckSectorIntegrity(long offset, long sectorSize)
         {
             var stream = FileSystem.GetStream();
-            var br = new BinaryReader(stream, Encoding.UTF8);
+            var br = new BinaryReader(stream);
             stream.Position = offset;
 
             while (offset != -1)
@@ -48,7 +47,7 @@ namespace Kursova
         {
             var stream = FileSystem.GetStream();
             stream.Position = offset + (sectorSize - 1 - sizeof(long));
-            var bw = new BinaryWriter(stream, Encoding.UTF8);
+            var bw = new BinaryWriter(stream);
             bw.Write((byte)0);
 
             WriteParityBit(offset, sectorSize);
