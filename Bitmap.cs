@@ -28,24 +28,25 @@ namespace Kursova
             WriteBitmap(bitArr, new BinaryWriter(FileSystem.GetStream()));
         }
 
-        internal static long FindFreeSector(BinaryReader br, int bitmapSectors, int sectorSize)
+        internal static long FindFreeSector(BinaryReader br, int bitmapSectors, int _sectorSize)
         {
             br.BaseStream.Position = 0;
             var writeOffset = -1;
-            for (var i = 0; i < bitmapSectors * sectorSize; i++)
+            for (var i = 0; i < bitmapSectors * _sectorSize; i++)
             {
                 var currByte = br.ReadByte();
                 if (currByte == 255)
                     continue;
                 var bits = new BitArray(new[] { currByte });
-                
-                for (var j = 0; j < 8; j++)
+                var freeBits = 0;
+
+                foreach (bool bit in bits)
                 {
-                    if(bits[j])
+                    if (bit)
                         continue;
-                    writeOffset = j * sectorSize;
-                    break;
+                    freeBits++;
                 }
+                writeOffset = (i + 1) * 8 - freeBits;
 
                 if (writeOffset != -1)
                     break;
@@ -53,9 +54,9 @@ namespace Kursova
                 //number of free bit is number of free sector
             }
             if (writeOffset == -1)
-                return -1;
+                return writeOffset;
 
-            return writeOffset + 1;
+            return writeOffset * _sectorSize + 1;
         }
 
         internal static long[] FindFreeSectors(BinaryReader br, int requiredSectors, int bitmapSectors, int sectorSize)
@@ -76,7 +77,7 @@ namespace Kursova
                 {
                     if(bits[j])
                         continue;
-                    var sectorIndx = j + ((byteNum - 1) * 8);//eyesore
+                    var sectorIndx = j + ((byteNum - 1) * 8);
                     offsets[indx++] = sectorSize * sectorIndx + 1;
                     requiredSectors--;
                     if (requiredSectors == 0)

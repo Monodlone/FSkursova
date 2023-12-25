@@ -18,7 +18,7 @@ namespace Kursova
             var data = br.ReadBytes((int)sectorSize);
             var parityBit = CalculateEvenParityBit(data);
 
-            stream.Position -= (sizeof(long) + 1);
+            stream.Position -= sizeof(long) + 1;
             bw.Write((byte)parityBit);
         }
 

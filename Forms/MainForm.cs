@@ -36,7 +36,6 @@ namespace Kursova.Forms
         {
             //create node from file info
             var node = new TreeNode(name) { ForeColor = isFile ? FileColor : DirColor, Tag = offset };
-            //add to CWD in treeview
             CWD.Nodes.Add(node);
         }
 
@@ -155,7 +154,7 @@ namespace Kursova.Forms
                 try
                 {
                     using var sw = new StreamWriter(fileStream);
-                    sw.Write(info[1]);
+                    sw.Write(info![1]);
                 }
                 catch (Exception ex)
                 {

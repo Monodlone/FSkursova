@@ -10,7 +10,7 @@ namespace Kursova
         //can't delete file if it's larger than 16 sectors
         //can't edit directories (maybe make it so the new name can't be longer than the old one)
         //if there are dirs in CWD -> to delete CWD you need to delete the dirs inside first
-        //ParityCheck works only sometimes lmao
+        //TODO 
 
         //TODO ForImplementing LIST:
         //TODO (bonus feature) Be able to restore the previous file system when starting the program
@@ -124,7 +124,7 @@ namespace Kursova
 
         internal static long GetRootOffset() => RootOffset;
 
-        internal static string[] ReadFile(long offset, string fileName)
+        internal static string[]? ReadFile(long offset, string fileName)
         {
             if (!ParityCheck.CheckSectorIntegrity(offset, _sectorSize))
                 return null;
@@ -213,7 +213,7 @@ namespace Kursova
         {
             if (fileOffset < RootOffset)
                 return;
-            var offsets = new long[16]; 
+            var offsets = new long[32]; 
             offsets[0] = fileOffset;
             Stream.Position = fileOffset + (_sectorSize - sizeof(long));
             //read sectors and save all offsets of the file
@@ -300,6 +300,10 @@ namespace Kursova
             ParityCheck.WriteParityBit(writeOffsets[^1], _sectorSize);
             UpdateDir(writeOffsets[0], MainForm.CWD);
             UpdateBitmap();
+
+            if (MainForm.CWD.ForeColor == MainForm.BadObjColor)
+                MainForm.ChangeToRootWhenCwdBad();
+
             MainForm.AddTreeviewNodes(fileName, writeOffsets[0], true);
         }
 
