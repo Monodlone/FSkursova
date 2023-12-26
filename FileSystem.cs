@@ -7,10 +7,8 @@ namespace Kursova
     {
         //TODO Problem LIST: 
         //bitmap (sometimes) throws error when writing long files
-        //can't delete file if it's larger than 16 sectors
         //can't edit directories (maybe make it so the new name can't be longer than the old one)
         //if there are dirs in CWD -> to delete CWD you need to delete the dirs inside first
-        //TODO 
 
         //TODO ForImplementing LIST:
         //TODO (bonus feature) Be able to restore the previous file system when starting the program
@@ -344,13 +342,22 @@ namespace Kursova
                     throw new ArgumentException("Fatal Error: Root is corrupted");
                 }
             }
-            Stream.Position = (long)cwd.Tag + cwd.Text.Length + 1; 
+            Stream.Position = (long)cwd.Tag + cwd.Text.Length + 1;
+            var isFull = false;
             for (var i = 0; i < _sectorSize/sizeof(long) - sizeof(long); i++)//8 bytes per offset - 1 byte for end of file/dir value
             {
                 var bytes = Br.ReadBytes(sizeof(long));
+                if (i == _sectorSize/sizeof(long) - sizeof(long) - 1 && BitConverter.ToInt64(bytes , 0) != 0)
+                    isFull = true;
                 if (BitConverter.ToInt64(bytes , 0) != 0)
                     continue;
                 break;
+            }
+
+            if (isFull)
+            {
+                MessageBox.Show("Error: Directory is full");
+                return;
             }
             Stream.Position -= sizeof(long);
             Bw.Write(fileOffset);
