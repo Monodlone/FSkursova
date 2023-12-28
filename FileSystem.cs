@@ -6,9 +6,9 @@ namespace Kursova
     internal static class FileSystem
     {
         //TODO Problem LIST: 
-        //bitmap (sometimes) throws error when writing long files
         //can't edit directories (maybe make it so the new name can't be longer than the old one)
         //if there are dirs in CWD -> to delete CWD you need to delete the dirs inside first
+        //TODO when moving big files around dirs one file goes on top of another
 
         //TODO ForImplementing LIST:
         //TODO (bonus feature) Be able to restore the previous file system when starting the program
@@ -134,7 +134,7 @@ namespace Kursova
 
             var contents = "";
             long nextSector = 0;
-            var readLength = (int)_sectorSize - 1 - fileName.Length - 1- sizeof(long);
+            var readLength = (int)_sectorSize - 1 - fileName.Length - 1 - sizeof(long);
             while (nextSector != -1)
             {
                 contents += MyToString(Br.ReadChars(readLength));
@@ -147,7 +147,6 @@ namespace Kursova
                 readLength = (int)_sectorSize - 1 - sizeof(long);
             }
             info[1] = CutString(contents);
-            //info[1] = contents;
             return info;
         }
 
@@ -205,6 +204,63 @@ namespace Kursova
                 UpdateBitmap();
                 MainForm.DeleteNode(obj);
             }
+        }
+
+        internal static void RemoveOffsetFromParent(long fileOffset, TreeNode parentNode, long parentOffset, int parentNameLength)
+        {
+            //scan all offsets until it finds fileOffset
+            //replace with (long)0
+            Stream.Position = parentOffset + parentNameLength + 1;
+            for (var i = parentNameLength; i < _sectorSize - sizeof(long); i+=sizeof(long))
+            {
+                var currOffsetBytes = Br.ReadBytes(sizeof(long));
+                var currOffset = BitConverter.ToInt64(currOffsetBytes, 0);
+
+                if (currOffset != fileOffset)
+                    continue;
+
+                Stream.Position -= sizeof(long);
+                Bw.Write((long)0);
+                break;
+            }
+
+            ParityCheck.UpdateParityBitOfCWD(parentOffset, _sectorSize);
+        }
+
+        internal static void UpdateDir(long fileOffset, TreeNode cwd)
+        {
+            if (!ParityCheck.CheckSectorIntegrity((long)cwd.Tag, _sectorSize))
+            {
+                cwd.ForeColor = MainForm.BadObjColor;
+                cwd = MainForm.RootNode;
+                //check root too before continuing
+                if (!ParityCheck.CheckSectorIntegrity((long)cwd.Tag, _sectorSize))
+                {
+                    MessageBox.Show("Fatal Error: Root is corrupted");
+                    throw new ArgumentException("Fatal Error: Root is corrupted");
+                }
+            }
+            Stream.Position = (long)cwd.Tag + cwd.Text.Length + 1;
+            var isFull = false;
+            for (var i = 0; i < _sectorSize/sizeof(long) - sizeof(long); i++)//8 bytes per offset - 1 byte for end of file/dir value
+            {
+                var bytes = Br.ReadBytes(sizeof(long));
+                if (i == _sectorSize/sizeof(long) - sizeof(long) - 1 && BitConverter.ToInt64(bytes , 0) != 0)
+                    isFull = true;
+                if (BitConverter.ToInt64(bytes , 0) != 0)
+                    continue;
+                break;
+            }
+
+            if (isFull)
+            {
+                MessageBox.Show("Error: Directory is full");
+                return;
+            }
+            Stream.Position -= sizeof(long);
+            Bw.Write(fileOffset);
+            //delete old parity bit then calculate and write new one
+            ParityCheck.UpdateParityBitOfCWD((long)cwd.Tag, _sectorSize);
         }
 
         private static void DeleteFile(long fileOffset, long parentOffset, int parentNameLength)
@@ -327,42 +383,6 @@ namespace Kursova
                 }
             }
             return strs;
-        }
-
-        private static void UpdateDir(long fileOffset, TreeNode cwd)
-        {
-            if (!ParityCheck.CheckSectorIntegrity((long)cwd.Tag, _sectorSize))
-            {
-                cwd.ForeColor = MainForm.BadObjColor;
-                cwd = MainForm.RootNode;
-                //check root too before continuing
-                if (!ParityCheck.CheckSectorIntegrity((long)cwd.Tag, _sectorSize))
-                {
-                    MessageBox.Show("Fatal Error: Root is corrupted");
-                    throw new ArgumentException("Fatal Error: Root is corrupted");
-                }
-            }
-            Stream.Position = (long)cwd.Tag + cwd.Text.Length + 1;
-            var isFull = false;
-            for (var i = 0; i < _sectorSize/sizeof(long) - sizeof(long); i++)//8 bytes per offset - 1 byte for end of file/dir value
-            {
-                var bytes = Br.ReadBytes(sizeof(long));
-                if (i == _sectorSize/sizeof(long) - sizeof(long) - 1 && BitConverter.ToInt64(bytes , 0) != 0)
-                    isFull = true;
-                if (BitConverter.ToInt64(bytes , 0) != 0)
-                    continue;
-                break;
-            }
-
-            if (isFull)
-            {
-                MessageBox.Show("Error: Directory is full");
-                return;
-            }
-            Stream.Position -= sizeof(long);
-            Bw.Write(fileOffset);
-            //delete old parity bit then calculate and write new one
-            ParityCheck.UpdateParityBitOfCWD((long)cwd.Tag, _sectorSize);
         }
         
         private static void UpdateBitmap()

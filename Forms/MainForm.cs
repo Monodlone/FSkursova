@@ -5,6 +5,7 @@ namespace Kursova.Forms
         internal static TreeNode RootNode { get; } = new("Root");
         internal static TreeNode CWD { get; private set; } = RootNode;
         internal static TreeNode? FileToInteract { get; private set; }
+        private static TreeNode? LastSelectedFile { get; set; }
 
         internal static readonly Color FileColor = Color.Green;
         internal static readonly Color BadObjColor = Color.Red;
@@ -22,7 +23,7 @@ namespace Kursova.Forms
             ExportBtn.Visible = false;
             ImportBtn.Visible = false;
             treeView.Visible = false;
-            RestoreBtn.Visible = false;
+            MoveBtn.Visible = false;
         }
 
         private void InitRoot()
@@ -52,6 +53,7 @@ namespace Kursova.Forms
             if (currNode.ForeColor == DirColor)//Red == Directory
             {
                 CWD = currNode;
+                LastSelectedFile = FileToInteract;
                 FileToInteract = null;
             }
             else //if (currNode.ForeColor == fileColor)//Green == File
@@ -201,7 +203,7 @@ namespace Kursova.Forms
             ExportBtn.Visible = true;
             ImportBtn.Visible = true;
             treeView.Visible = true;
-            RestoreBtn.Visible = false;
+            MoveBtn.Visible = true;
             StartBtn.Visible = false;
         }
 
@@ -209,7 +211,7 @@ namespace Kursova.Forms
         {
             RootNode.Expand();
             //keep last selected node highlighted
-            if(treeView.SelectedNode != null)
+            if (treeView.SelectedNode != null)
                 treeView.SelectedNode.Checked = true;
             //keep bad directory collapsed
             if (CWD.ForeColor == BadObjColor)
@@ -220,6 +222,24 @@ namespace Kursova.Forms
                 MessageBox.Show("Fatal error: Root is corrupted");
                 throw new ArgumentException("Fatal error: Root is corrupted");
             }
+        }
+
+        private void MoveBtn_Click(object sender, EventArgs e)
+        {
+            if (LastSelectedFile == null)
+                return;
+            if (LastSelectedFile.Parent == CWD)
+                return;
+            //get node tag
+            var fileOffset = (long)LastSelectedFile.Tag;
+            //remove tag from current parent dir
+            FileSystem.RemoveOffsetFromParent(fileOffset, LastSelectedFile.Parent,
+                                    (long)LastSelectedFile.Parent.Tag, LastSelectedFile.Parent.Text.Length);
+            //write tag to new parent dir
+            FileSystem.UpdateDir(fileOffset, CWD);
+            //move node to new parent dir in tree view
+            LastSelectedFile.Remove();
+            CWD.Nodes.Add(LastSelectedFile);
         }
     }
 }
