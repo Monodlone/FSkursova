@@ -94,13 +94,13 @@ namespace Kursova
             bw.Seek(0, SeekOrigin.Begin);
             for (var i = 0; i < bitArr.Length; i += sizeof(long))
             {
-                byte tmp = 0;
+                byte curr = 0;
 
                 for (var j = i; j < i + 8; j++)//get a byte from 8 bool values
                     if(bitArr[j])
-                        tmp |= (byte)(1 << (j - i));//if bitArr is true set the bit in byte to 1
+                        curr |= (byte)(1 << (j - i));//if bitArr is true set the bit in byte to 1
 
-                bw.Write(tmp);
+                bw.Write(curr);
             }
         }
     }
