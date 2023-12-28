@@ -9,16 +9,16 @@ namespace Kursova
         //Only load the byte I need to edit the bits in!!
         //but this works for now...
 
-        internal static void UpdateBitmap(BinaryReader br, int sectorSize, int bitmapSectors, int sectorCount)
+        internal static void UpdateBitmap(BinaryReader br, int sectorSize, int bitmapSectors, int sectorCount, long rootOffset)
         {
             BitArray bitArr = new(sectorCount);
             for (var i = 0; i < bitmapSectors; i++)
                 bitArr[i] = true;
 
-            br.BaseStream.Position = bitmapSectors * sectorSize + 2;//+2 cuz for dirs first byte is empty
+            br.BaseStream.Position = rootOffset + 1;//+1 cuz for dirs first byte is empty
             for (var i = bitmapSectors; i < sectorCount; i++)
             {
-                var tmp = br.ReadChar();//first char of file/dir name
+                var tmp = br.ReadChar();
                 if (tmp != 0)
                     bitArr[i] = true;//taken sector
                 else
@@ -28,11 +28,11 @@ namespace Kursova
             WriteBitmap(bitArr, new BinaryWriter(FileSystem.GetStream()));
         }
 
-        internal static long FindFreeSector(BinaryReader br, int bitmapSectors, int _sectorSize)
+        internal static long FindFreeSector(BinaryReader br, int bitmapSectors, int sectorSize)
         {
             br.BaseStream.Position = 0;
             var writeOffset = -1;
-            for (var i = 0; i < bitmapSectors * _sectorSize; i++)
+            for (var i = 0; i < bitmapSectors * sectorSize; i++)
             {
                 var currByte = br.ReadByte();
                 if (currByte == 255)
@@ -56,7 +56,7 @@ namespace Kursova
             if (writeOffset == -1)
                 return writeOffset;
 
-            return writeOffset * _sectorSize + 1;
+            return writeOffset * sectorSize + 1;
         }
 
         internal static long[] FindFreeSectors(BinaryReader br, int requiredSectors, int bitmapSectors, int sectorSize)
@@ -77,7 +77,7 @@ namespace Kursova
                 {
                     if(bits[j])
                         continue;
-                    var sectorIndx = j + ((byteNum - 1) * 8);
+                    var sectorIndx = j + (byteNum - 1) * 8;//eyesore
                     offsets[indx++] = sectorSize * sectorIndx + 1;
                     requiredSectors--;
                     if (requiredSectors == 0)
@@ -92,15 +92,15 @@ namespace Kursova
         private static void WriteBitmap(BitArray bitArr, BinaryWriter bw)
         {
             bw.Seek(0, SeekOrigin.Begin);
-            for (var i = 0; i < bitArr.Length;)
+            for (var i = 0; i < bitArr.Length; i += sizeof(long))
             {
                 byte tmp = 0;
+
                 for (var j = i; j < i + 8; j++)//get a byte from 8 bool values
                     if(bitArr[j])
-                        tmp |= (byte)(1 << j);
+                        tmp |= (byte)(1 << (j - i));//if bitArr is true set the bit in byte to 1
 
                 bw.Write(tmp);
-                i += 8;
             }
         }
     }
