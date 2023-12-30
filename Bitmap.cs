@@ -15,7 +15,7 @@ namespace Kursova
             for (var i = 0; i < bitmapSectors; i++)
                 bitArr[i] = true;
 
-            br.BaseStream.Position = rootOffset + 1;//+1 cuz for dirs first byte is empty
+            br.BaseStream.Position = rootOffset + 1;//+1 cuz dirs first byte is empty
             for (var i = bitmapSectors; i < sectorCount; i++)
             {
                 var tmp = br.ReadChar();
@@ -101,7 +101,7 @@ namespace Kursova
                         curr |= (byte)(1 << (j - i));//if bitArr is true set the bit in byte to 1
 
                 bw.Write(curr);
-            }
+            } 
         }
     }
 }

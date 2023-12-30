@@ -149,9 +149,10 @@ namespace Kursova.Forms
 
             var svFileDialog = new SaveFileDialog();
             svFileDialog.Filter = "txt files (*.txt)|*.txt";
+            var info = FileSystem.ReadFile((long)FileToInteract.Tag, FileToInteract.Text);
+            svFileDialog.FileName = info[0];
             if (svFileDialog.ShowDialog() == DialogResult.OK)
             {
-                var info = FileSystem.ReadFile((long)FileToInteract.Tag, FileToInteract.Text);
                 using var fileStream = new FileStream(svFileDialog.FileName, FileMode.Create);
                 try
                 {
@@ -228,7 +229,7 @@ namespace Kursova.Forms
         {
             if (LastSelectedFile == null)
                 return;
-            if (LastSelectedFile.Parent == CWD)
+            if (LastSelectedFile.Parent == CWD || LastSelectedFile.Parent == null)
                 return;
             //get node tag
             var fileOffset = (long)LastSelectedFile.Tag;

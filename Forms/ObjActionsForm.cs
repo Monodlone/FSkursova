@@ -18,7 +18,7 @@
 
         internal void SetFileContents(string[] info)
         {
-            if (info[0] == null || info[1] == null) return;
+            if (info[0] == null || info[1] == null || info == null) return;
 
             nameTxtBox.Text = info[0];
             contentsTextbox.Text = info[1];
@@ -26,6 +26,11 @@
 
         private void CreateBtn_Click(object sender, EventArgs e)
         {
+            if (nameTxtBox.Text == "")
+            {
+                Close();
+                return;
+            }
             EditBtn.Visible = false;
             FileName = nameTxtBox.Text;
             FileContents = contentsTextbox.Text;

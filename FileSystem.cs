@@ -8,9 +8,7 @@ namespace Kursova
         //BUG (feature) LIST: 
         //can't edit directories (maybe make it so the new name can't be longer than the old one)
         //if there are dirs in CWD -> to delete CWD you need to delete the dirs inside first
-        //TODO (FIXED) make 3 files with below text(3 sectors for 256 bytes). Third one overwrites the last sector of the second file
         //Eos magnam asperiores at tenetur quidem et consequatur. Dolores eaque rerum praesentium qui fugiat dolor. Quae quaerat neque eveniet perspiciatis ut eum necessitatibus qui. Et commodi harum nam eligendi placeat vitae praesentium. Illo molestias consectetur ut. Quas hic repudiandae amet
-        //this was because i wasn't setting the taken bits properly in writebitmap method
         //TODO For Implementing LIST:
 
         private static readonly FileStream Stream = File.Create("C:\\Users\\PiwKi\\Desktop\\fs_file");

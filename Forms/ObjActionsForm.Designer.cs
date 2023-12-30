@@ -29,48 +29,41 @@
         private void InitializeComponent()
         {
             nameLbl = new Label();
-            contentsTextbox = new TextBox();
             contentsLbl = new Label();
             CreateBtn = new Button();
             extensionLbl = new Label();
             EditBtn = new Button();
             nameTxtBox = new TextBox();
+            contentsTextbox = new TextBox();
             SuspendLayout();
             // 
             // nameLbl
             // 
             nameLbl.AutoSize = true;
-            nameLbl.Location = new Point(28, 26);
+            nameLbl.Location = new Point(48, 52);
+            nameLbl.Margin = new Padding(5, 0, 5, 0);
             nameLbl.Name = "nameLbl";
-            nameLbl.Size = new Size(57, 15);
+            nameLbl.Size = new Size(100, 30);
             nameLbl.TabIndex = 1;
             nameLbl.Text = "FileName";
-            // 
-            // contentsTextbox
-            // 
-            contentsTextbox.Font = new Font("Segoe UI", 10F);
-            contentsTextbox.Location = new Point(95, 64);
-            contentsTextbox.Multiline = true;
-            contentsTextbox.Name = "contentsTextbox";
-            contentsTextbox.ScrollBars = ScrollBars.Vertical;
-            contentsTextbox.Size = new Size(343, 280);
-            contentsTextbox.TabIndex = 2;
             // 
             // contentsLbl
             // 
             contentsLbl.AutoSize = true;
-            contentsLbl.Location = new Point(28, 64);
+            contentsLbl.Location = new Point(48, 128);
+            contentsLbl.Margin = new Padding(5, 0, 5, 0);
             contentsLbl.Name = "contentsLbl";
-            contentsLbl.Size = new Size(55, 15);
+            contentsLbl.Size = new Size(96, 30);
             contentsLbl.TabIndex = 3;
             contentsLbl.Text = "Contents";
             // 
             // CreateBtn
             // 
             CreateBtn.Font = new Font("Segoe UI", 11F);
-            CreateBtn.Location = new Point(346, 350);
+            CreateBtn.Location = new Point(593, 700);
+            CreateBtn.Margin = new Padding(5, 6, 5, 6);
             CreateBtn.Name = "CreateBtn";
-            CreateBtn.Size = new Size(92, 35);
+            CreateBtn.Size = new Size(158, 70);
             CreateBtn.TabIndex = 4;
             CreateBtn.Text = "Create";
             CreateBtn.UseVisualStyleBackColor = true;
@@ -80,18 +73,20 @@
             // 
             extensionLbl.AutoSize = true;
             extensionLbl.Font = new Font("Segoe UI", 10F);
-            extensionLbl.Location = new Point(222, 26);
+            extensionLbl.Location = new Point(381, 52);
+            extensionLbl.Margin = new Padding(5, 0, 5, 0);
             extensionLbl.Name = "extensionLbl";
-            extensionLbl.Size = new Size(28, 19);
+            extensionLbl.Size = new Size(46, 32);
             extensionLbl.TabIndex = 5;
             extensionLbl.Text = ".txt";
             // 
             // EditBtn
             // 
             EditBtn.Font = new Font("Segoe UI", 11F);
-            EditBtn.Location = new Point(346, 350);
+            EditBtn.Location = new Point(593, 700);
+            EditBtn.Margin = new Padding(5, 6, 5, 6);
             EditBtn.Name = "EditBtn";
-            EditBtn.Size = new Size(92, 35);
+            EditBtn.Size = new Size(158, 70);
             EditBtn.TabIndex = 6;
             EditBtn.Text = "Edit";
             EditBtn.UseVisualStyleBackColor = true;
@@ -99,24 +94,37 @@
             // 
             // nameTxtBox
             // 
-            nameTxtBox.Location = new Point(104, 23);
+            nameTxtBox.Location = new Point(178, 46);
+            nameTxtBox.Margin = new Padding(5, 6, 5, 6);
             nameTxtBox.Name = "nameTxtBox";
-            nameTxtBox.Size = new Size(121, 23);
+            nameTxtBox.Size = new Size(205, 35);
             nameTxtBox.TabIndex = 8;
             nameTxtBox.KeyPress += nameTxtBox_KeyPress;
             // 
+            // contentsTextbox
+            // 
+            contentsTextbox.Font = new Font("Segoe UI", 10F);
+            contentsTextbox.Location = new Point(178, 132);
+            contentsTextbox.Margin = new Padding(5, 6, 5, 6);
+            contentsTextbox.Multiline = true;
+            contentsTextbox.Name = "contentsTextbox";
+            contentsTextbox.ScrollBars = ScrollBars.Vertical;
+            contentsTextbox.Size = new Size(585, 556);
+            contentsTextbox.TabIndex = 9;
+            // 
             // ObjActionsForm
             // 
-            AutoScaleDimensions = new SizeF(7F, 15F);
+            AutoScaleDimensions = new SizeF(12F, 30F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(450, 397);
+            ClientSize = new Size(775, 794);
+            Controls.Add(contentsTextbox);
             Controls.Add(nameTxtBox);
             Controls.Add(EditBtn);
             Controls.Add(extensionLbl);
             Controls.Add(CreateBtn);
             Controls.Add(contentsLbl);
-            Controls.Add(contentsTextbox);
             Controls.Add(nameLbl);
+            Margin = new Padding(5, 6, 5, 6);
             Name = "ObjActionsForm";
             Text = "Create";
             Load += ObjActionsForm_Load;
@@ -126,11 +134,11 @@
 
         #endregion
         private Label nameLbl;
-        private TextBox contentsTextbox;
         private Label contentsLbl;
         private Button CreateBtn;
         private Label extensionLbl;
         private Button EditBtn;
         private TextBox nameTxtBox;
+        private TextBox contentsTextbox;
     }
 }
