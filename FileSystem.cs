@@ -137,7 +137,9 @@ namespace Kursova
                 var bytes = Br.ReadBytes(sizeof(long));
                 nextSector = BitConverter.ToInt64(bytes , 0);
 
-                if (nextSector == -1) break;
+                if (nextSector == -1)
+                    break;
+
                 Stream.Position = nextSector;
                 readLength = (int)_sectorSize - 1 - sizeof(long);
             }
