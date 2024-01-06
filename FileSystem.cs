@@ -242,6 +242,8 @@ namespace Kursova
                     {
                         Stream.Position = currPosition;
                         currPosition += 8;
+                        if (currPosition > _sectorSize - sizeof(long) - 1)
+                            break;
                         var bytes = Br.ReadBytes(sizeof(long));
                         var fileOffset = BitConverter.ToInt64(bytes , 0);
 
