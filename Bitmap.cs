@@ -4,11 +4,6 @@ namespace Kursova
 {
     internal static class Bitmap
     {
-        //TODO: don't read whole BitArray, read only what I need
-        //Its wrong to load the whole BitArray in memory.
-        //Only load the byte I need to edit the bits in!!
-        //but this works for now...
-
         internal static void UpdateBitmap(BinaryReader br, int sectorSize, int bitmapSectors, int sectorCount, long rootOffset)
         {
             BitArray bitArr = new(sectorCount);

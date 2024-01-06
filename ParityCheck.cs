@@ -1,8 +1,5 @@
-﻿using System.Text;
-
-namespace Kursova
+﻿namespace Kursova
 {
-    //TODO even parity check
     //end of every data sector have a parity bit
     //when reading first CheckSectorIntegrity 
     //when false -> don't read file -> mark as bad file with BadObjColor
@@ -53,7 +50,7 @@ namespace Kursova
             WriteParityBit(offset, sectorSize);
         }
 
-        //0 if even num of true bits, 1 otherwise
+        //0 if even num of true bits, otherwise 1
         private static bool CheckEvenParity(byte[] data) => CalculateEvenParityBit(data) == 0;
 
         private static int CalculateEvenParityBit(byte[] data)

@@ -43,9 +43,9 @@
             nameLbl.Location = new Point(48, 52);
             nameLbl.Margin = new Padding(5, 0, 5, 0);
             nameLbl.Name = "nameLbl";
-            nameLbl.Size = new Size(100, 30);
+            nameLbl.Size = new Size(69, 30);
             nameLbl.TabIndex = 1;
-            nameLbl.Text = "FileName";
+            nameLbl.Text = "Name";
             // 
             // contentsLbl
             // 

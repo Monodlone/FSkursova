@@ -62,7 +62,6 @@ namespace Kursova.Forms
 
         private static string MyGetNameWithoutExtension(string path)
         {
-            //C:\Users\PiwKi\Desktop\asd.txt
             var name = "";
             var lastIndex = -1;
             for (var i = 0; i < path.Length; i++)
