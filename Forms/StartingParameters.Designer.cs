@@ -33,6 +33,7 @@
             label2 = new Label();
             SectorSizeBox = new ListBox();
             SectorCountBox = new ListBox();
+            ResumeBtn = new Button();
             SuspendLayout();
             // 
             // CreateFsBtn
@@ -90,11 +91,23 @@
             SectorCountBox.Size = new Size(120, 24);
             SectorCountBox.TabIndex = 6;
             // 
+            // ResumeBtn
+            // 
+            ResumeBtn.Font = new Font("Segoe UI", 10F);
+            ResumeBtn.Location = new Point(9, 160);
+            ResumeBtn.Name = "ResumeBtn";
+            ResumeBtn.Size = new Size(89, 35);
+            ResumeBtn.TabIndex = 7;
+            ResumeBtn.Text = "Resume";
+            ResumeBtn.UseVisualStyleBackColor = true;
+            ResumeBtn.Click += ResumeBtn_Click;
+            // 
             // StartingParameters
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(299, 209);
+            Controls.Add(ResumeBtn);
             Controls.Add(SectorCountBox);
             Controls.Add(SectorSizeBox);
             Controls.Add(label2);
@@ -112,5 +125,6 @@
         private Label label2;
         private ListBox SectorSizeBox;
         private ListBox SectorCountBox;
+        private Button ResumeBtn;
     }
 }

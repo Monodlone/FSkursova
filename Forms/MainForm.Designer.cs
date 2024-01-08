@@ -175,7 +175,7 @@
         #endregion
         private Button CreateFileBtn;
         private Button CreateDirBtn;
-        private TreeView treeView;
+        private static TreeView treeView;
         private Button EditBtn;
         private Button DeleteBtn;
         private Button ImportBtn;

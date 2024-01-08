@@ -86,7 +86,8 @@ namespace Kursova
 
         private static void WriteBitmap(BitArray bitArr, BinaryWriter bw)
         {
-            bw.Seek(0, SeekOrigin.Begin);
+            var stream  = FileSystem.GetStream();
+            stream.Position = sizeof(long) * 2 + 1;//skip metadata
             for (var i = 0; i < bitArr.Length; i += sizeof(long))
             {
                 byte curr = 0;

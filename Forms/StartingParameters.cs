@@ -1,4 +1,6 @@
-﻿namespace Kursova.Forms
+﻿using System.Text;
+
+namespace Kursova.Forms
 {
     public partial class StartingParameters : Form
     {
@@ -53,6 +55,23 @@
                     SectorCountBox.Items.Add("10240");
                     break;
             }
+        }
+
+        private void ResumeBtn_Click(object sender, EventArgs e)
+        {
+            MainForm.Restore = true;
+
+            var stream = File.Open("fsFile", FileMode.OpenOrCreate);
+            var br = new BinaryReader(stream, Encoding.UTF8);
+
+            stream.Position = 0;
+            var bytes = br.ReadBytes(sizeof(long));
+            SectorSize = BitConverter.ToInt64(bytes, 0);
+            bytes = br.ReadBytes(sizeof(long));
+            SectorCount = BitConverter.ToInt64(bytes, 0);
+            stream.Close();
+            br.Close();
+            Close();
         }
     }
 }

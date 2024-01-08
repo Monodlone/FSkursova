@@ -2,10 +2,12 @@ namespace Kursova.Forms
 {
     public partial class MainForm : Form
     {
-        internal static TreeNode RootNode { get; } = new("Root");
-        internal static TreeNode CWD { get; private set; } = RootNode;
+        internal static TreeNode RootNode { get; private set;  }
+        internal static TreeNode CWD { get; private set; }
         internal static TreeNode? FileToInteract { get; private set; }
         private static TreeNode? LastSelectedFile { get; set; }
+
+        internal static bool Restore { get; set; }
 
         internal static readonly Color FileColor = Color.Green;
         internal static readonly Color BadObjColor = Color.Red;
@@ -26,11 +28,12 @@ namespace Kursova.Forms
             MoveBtn.Visible = false;
         }
 
-        private void InitRoot()
+        internal static void InitRoot(TreeNode root)
         {
-            treeView.Nodes.Add(RootNode);
+            RootNode = root;
             RootNode.ForeColor = DirColor;
-            RootNode.Tag = FileSystem.GetRootOffset();
+            treeView.Nodes.Add(RootNode);
+            CWD = RootNode;
         }
 
         public static void AddTreeviewNodes(string name, long offset, bool isFile)
@@ -205,8 +208,7 @@ namespace Kursova.Forms
             initForm.ShowDialog();
             if (initForm.GetSectorSize() == 0 || initForm.GetSectorCount() == 0)
                 return;
-            FileSystem.Initiate(initForm.GetSectorSize(), initForm.GetSectorCount());
-            InitRoot();
+            FileSystem.Initiate(initForm.GetSectorSize(), initForm.GetSectorCount(), Restore);
             CreateFileBtn.Visible = true;
             CreateDirBtn.Visible = true;
             DeleteBtn.Visible = true;

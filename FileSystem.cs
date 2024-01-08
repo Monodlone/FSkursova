@@ -1,18 +1,16 @@
 ﻿using System.Text;
-using System.Xml.Linq;
 using Kursova.Forms;
 
 namespace Kursova
 {
     //TODO DON'T DEPEND ON TREEVIEW
     //MoveBtn method relies on treeview for everything
-    //be able to resume the filesystem after closing and opening the project
 
     internal static class FileSystem
     {
-        private static readonly FileStream Stream = File.Create("C:\\Users\\PiwKi\\Desktop\\fs_file");
-        private static readonly BinaryWriter Bw = new(Stream, Encoding.UTF8, true);
-        private static readonly BinaryReader Br = new(Stream, Encoding.UTF8, true);
+        private static FileStream Stream { get; set; }
+        private static BinaryWriter Bw { get; set; }
+        private static BinaryReader Br { get; set; }
         private static long BitmapSectors { get; set; } = 1;
         private static long RootOffset { get; set; }
 
@@ -23,15 +21,31 @@ namespace Kursova
 
         internal const int NameLength = 14;
 
-        internal static void Initiate(long sectorSize, long sectorCount)
+        internal static void Initiate(long sectorSize, long sectorCount, bool restore)
         {
-            _sectorCount = sectorCount;
             _sectorSize = sectorSize;
+            _sectorCount = sectorCount;
             _totalSize = _sectorCount * _sectorSize;
-            Stream.SetLength(_totalSize);
             _bitmapSize = _sectorCount / sizeof(long);
-            Stream.SetLength(_totalSize);
-            Stream.Position = 0;
+
+            if (restore)
+            {
+                Stream = File.Open("fsFile", FileMode.OpenOrCreate);
+                Bw = new BinaryWriter(Stream, Encoding.UTF8, true);
+                Br = new BinaryReader(Stream, Encoding.UTF8, true);
+            }
+            else
+            {
+                Stream = File.Create("fsFile");
+                Bw = new BinaryWriter(Stream, Encoding.UTF8, true);
+                Br = new BinaryReader(Stream, Encoding.UTF8, true);
+                Stream.SetLength(_totalSize);
+
+                //write metadata for restoring
+                Stream.Position = 0;
+                Bw.Write(_sectorSize);
+                Bw.Write(_sectorCount);
+            }
 
             var tmp = _bitmapSize;
             while (tmp > _sectorSize)
@@ -41,13 +55,28 @@ namespace Kursova
             }
 
             RootOffset = BitmapSectors * _sectorSize + 1;
-            Stream.Position = RootOffset;
-            Bw.Write(false);
-            Bw.Write((long)-1);
-            Bw.Write("Root");
-            Stream.Position = RootOffset + (_sectorSize - sizeof(long));
-            Bw.Write((long)-1);
-            UpdateBitmap();
+            if (restore)
+            {
+                Stream.Position = RootOffset + 2 + sizeof(long);
+                var rootName = MyToString(Br.ReadChars(NameLength));
+
+                var rootNode = new TreeNode(rootName) { Tag = RootOffset };
+                MainForm.InitRoot(rootNode);
+                ParityCheck.WriteParityBit(RootOffset, _sectorSize);
+            }
+            else
+            {
+                Stream.Position = RootOffset;
+                Bw.Write(false);
+                Bw.Write((long)-1);
+                Bw.Write(MyToCharArray("Root"));
+                Stream.Position = RootOffset + (_sectorSize - sizeof(long));
+                Bw.Write((long)-1);
+                var rootNode = new TreeNode("Root") { Tag = RootOffset };
+                MainForm.InitRoot(rootNode);
+                UpdateBitmap();
+                ParityCheck.WriteParityBit(RootOffset, _sectorSize);
+            }
         }
 
         internal static void CreateFile(string? fileName, string fileContents)
@@ -82,11 +111,11 @@ namespace Kursova
                 Stream.Position = writeOffset;
                 Bw.Write(true);
                 Bw.Write((long)MainForm.CWD.Tag);
-                Bw.Write(fileName.ToCharArray());
+                Bw.Write(MyToCharArray(fileName));
                 Stream.Position = writeOffset + 1 + 8 + NameLength;
 
                 if (fileContents != null)
-                    Bw.Write(fileContents.ToCharArray());
+                    Bw.Write(MyToCharArray(fileContents));
 
                 //write special value at end of sector
                 Stream.Position = writeOffset + _sectorSize - sizeof(long);
@@ -115,7 +144,7 @@ namespace Kursova
             Stream.Position = writeOffset;
             Bw.Write(false);
             Bw.Write((long)MainForm.CWD.Tag);
-            Bw.Write(dirName.ToCharArray());
+            Bw.Write(MyToCharArray(dirName));
             Stream.Position = writeOffset + 1 + 8 + NameLength;
 
             UpdateDir(writeOffset, MainForm.CWD);
@@ -214,8 +243,6 @@ namespace Kursova
         }
 
         internal static FileStream GetStream() => Stream;
-
-        internal static long GetRootOffset() => RootOffset;
 
         internal static long GetParentOffset(long offset)
         {
@@ -449,12 +476,12 @@ namespace Kursova
             Stream.Position = writeOffsets[0];
             Bw.Write(true);
             Bw.Write((long)MainForm.CWD.Tag);
-            Bw.Write(fileName.ToCharArray());
+            Bw.Write(MyToCharArray(fileName));
             Stream.Position = writeOffsets[0] + 1 + 8 + NameLength;
 
             for (var i = 0; i < requiredSectors; i++)
             {
-                Bw.Write(strings[i].ToCharArray());
+                Bw.Write(MyToCharArray(strings[i]));
 
                 if (i < writeOffsets.Length - 1)
                 {
@@ -485,7 +512,7 @@ namespace Kursova
             var firstPart = "";
             var indx = 0;
             int i;
-            for (i = 0; i < _sectorSize - NameLength - sizeof(long) - 2; i++)
+            for (i = 0; i < _sectorSize - 1 - sizeof(long) - NameLength - 1 - sizeof(long); i++)
                 firstPart += str[i];
             strs[indx++] = firstPart;
 
@@ -494,7 +521,7 @@ namespace Kursova
             {
                 strs[indx] += str[i];
                 counter++;
-                if (counter == _sectorSize - sizeof(long) - 1)
+                if (counter == _sectorSize - 1 - sizeof(long))
                 {
                     indx++;
                     counter = 0;
@@ -527,6 +554,14 @@ namespace Kursova
                 cutStr += t;
             }
             return cutStr;
+        }
+
+        private static char[] MyToCharArray(string str)
+        {
+            var arr = new char[str.Length];
+            for (var i = 0; i < str.Length; i++)
+                arr[i] = str[i];
+            return arr;
         }
     }
 }
