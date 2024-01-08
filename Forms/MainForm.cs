@@ -43,6 +43,9 @@ namespace Kursova.Forms
         public static void DeleteNode(TreeNode node) => node.Remove();
 
         internal static void ChangeToRootWhenCwdBad() => CWD = RootNode;
+
+        internal static void ResetParentDir(TreeNode node) => node.Nodes.Clear();
+
         internal static void ChangeCWDForFileEditing(TreeNode fileParent) => CWD = fileParent;
 
         private void TreeView_AfterSelect(object sender, TreeViewEventArgs e)
@@ -55,7 +58,6 @@ namespace Kursova.Forms
                 CWD = currNode;
                 LastSelectedFile = FileToInteract;
                 FileToInteract = null;
-                FileSystem.ReadDirectory((long)CWD.Tag);
             }
             else //if (currNode.ForeColor == fileColor)//Green == File
                 FileToInteract = currNode;
@@ -96,6 +98,7 @@ namespace Kursova.Forms
             {
                 FileSystem.ReadDirectory((long)CWD.Tag);
                 CWD.Expand();
+                return;
             }
 
             if (FileToInteract == null)
@@ -236,12 +239,13 @@ namespace Kursova.Forms
         {
             if (LastSelectedFile == null)
                 return;
-            if (LastSelectedFile.Parent == CWD || LastSelectedFile.Parent == null)
+            if (LastSelectedFile.Parent == CWD)
                 return;
             //get node tag
             var fileOffset = (long)LastSelectedFile.Tag;
             //remove tag from current parent dir
-            FileSystem.RemoveOffsetFromParent(fileOffset, (long)LastSelectedFile.Parent.Tag);
+            var parentOffset = FileSystem.GetParentOffset(fileOffset);
+            FileSystem.RemoveOffsetFromParent(fileOffset, parentOffset);
             //write tag to new parent dir
             FileSystem.UpdateDir(fileOffset, CWD);
             //move node to new parent dir in tree view

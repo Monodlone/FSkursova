@@ -43,10 +43,9 @@
             // CreateFileBtn
             // 
             CreateFileBtn.Font = new Font("Segoe UI", 10F);
-            CreateFileBtn.Location = new Point(485, 42);
-            CreateFileBtn.Margin = new Padding(5, 6, 5, 6);
+            CreateFileBtn.Location = new Point(283, 21);
             CreateFileBtn.Name = "CreateFileBtn";
-            CreateFileBtn.Size = new Size(156, 56);
+            CreateFileBtn.Size = new Size(91, 28);
             CreateFileBtn.TabIndex = 1;
             CreateFileBtn.Text = "Create file";
             CreateFileBtn.UseVisualStyleBackColor = true;
@@ -55,10 +54,9 @@
             // CreateDirBtn
             // 
             CreateDirBtn.Font = new Font("Segoe UI", 10F);
-            CreateDirBtn.Location = new Point(485, 110);
-            CreateDirBtn.Margin = new Padding(5, 6, 5, 6);
+            CreateDirBtn.Location = new Point(283, 55);
             CreateDirBtn.Name = "CreateDirBtn";
-            CreateDirBtn.Size = new Size(156, 56);
+            CreateDirBtn.Size = new Size(91, 28);
             CreateDirBtn.TabIndex = 3;
             CreateDirBtn.Text = "Create dir";
             CreateDirBtn.UseVisualStyleBackColor = true;
@@ -67,10 +65,9 @@
             // treeView
             // 
             treeView.Font = new Font("Segoe UI", 11F);
-            treeView.Location = new Point(21, 24);
-            treeView.Margin = new Padding(5, 6, 5, 6);
+            treeView.Location = new Point(12, 12);
             treeView.Name = "treeView";
-            treeView.Size = new Size(451, 848);
+            treeView.Size = new Size(265, 426);
             treeView.TabIndex = 4;
             treeView.AfterSelect += TreeView_AfterSelect;
             treeView.MouseMove += treeView_MouseMove;
@@ -78,10 +75,9 @@
             // EditBtn
             // 
             EditBtn.Font = new Font("Segoe UI", 10F);
-            EditBtn.Location = new Point(485, 246);
-            EditBtn.Margin = new Padding(5, 6, 5, 6);
+            EditBtn.Location = new Point(283, 123);
             EditBtn.Name = "EditBtn";
-            EditBtn.Size = new Size(156, 56);
+            EditBtn.Size = new Size(91, 28);
             EditBtn.TabIndex = 5;
             EditBtn.Text = "Edit";
             EditBtn.UseVisualStyleBackColor = true;
@@ -90,10 +86,9 @@
             // DeleteBtn
             // 
             DeleteBtn.Font = new Font("Segoe UI", 10F);
-            DeleteBtn.Location = new Point(485, 450);
-            DeleteBtn.Margin = new Padding(5, 6, 5, 6);
+            DeleteBtn.Location = new Point(283, 225);
             DeleteBtn.Name = "DeleteBtn";
-            DeleteBtn.Size = new Size(156, 56);
+            DeleteBtn.Size = new Size(91, 28);
             DeleteBtn.TabIndex = 6;
             DeleteBtn.Text = "Delete";
             DeleteBtn.UseVisualStyleBackColor = true;
@@ -102,10 +97,9 @@
             // ImportBtn
             // 
             ImportBtn.Font = new Font("Segoe UI", 10F);
-            ImportBtn.Location = new Point(485, 314);
-            ImportBtn.Margin = new Padding(5, 6, 5, 6);
+            ImportBtn.Location = new Point(283, 157);
             ImportBtn.Name = "ImportBtn";
-            ImportBtn.Size = new Size(156, 56);
+            ImportBtn.Size = new Size(91, 28);
             ImportBtn.TabIndex = 7;
             ImportBtn.Text = "Import";
             ImportBtn.UseVisualStyleBackColor = true;
@@ -114,10 +108,9 @@
             // ExportBtn
             // 
             ExportBtn.Font = new Font("Segoe UI", 10F);
-            ExportBtn.Location = new Point(485, 382);
-            ExportBtn.Margin = new Padding(5, 6, 5, 6);
+            ExportBtn.Location = new Point(283, 191);
             ExportBtn.Name = "ExportBtn";
-            ExportBtn.Size = new Size(156, 56);
+            ExportBtn.Size = new Size(91, 28);
             ExportBtn.TabIndex = 8;
             ExportBtn.Text = "Export";
             ExportBtn.UseVisualStyleBackColor = true;
@@ -126,10 +119,9 @@
             // ViewBtn
             // 
             ViewBtn.Font = new Font("Segoe UI", 10F);
-            ViewBtn.Location = new Point(485, 178);
-            ViewBtn.Margin = new Padding(5, 6, 5, 6);
+            ViewBtn.Location = new Point(283, 89);
             ViewBtn.Name = "ViewBtn";
-            ViewBtn.Size = new Size(156, 56);
+            ViewBtn.Size = new Size(91, 28);
             ViewBtn.TabIndex = 9;
             ViewBtn.Text = "View";
             ViewBtn.UseVisualStyleBackColor = true;
@@ -138,10 +130,9 @@
             // StartBtn
             // 
             StartBtn.Font = new Font("Segoe UI", 12F);
-            StartBtn.Location = new Point(430, 518);
-            StartBtn.Margin = new Padding(5, 6, 5, 6);
+            StartBtn.Location = new Point(251, 259);
             StartBtn.Name = "StartBtn";
-            StartBtn.Size = new Size(211, 114);
+            StartBtn.Size = new Size(123, 57);
             StartBtn.TabIndex = 10;
             StartBtn.Text = "Start";
             StartBtn.UseVisualStyleBackColor = true;
@@ -149,21 +140,21 @@
             // 
             // MoveBtn
             // 
+            MoveBtn.AutoSize = true;
             MoveBtn.Font = new Font("Segoe UI", 10F);
-            MoveBtn.Location = new Point(485, 518);
-            MoveBtn.Margin = new Padding(5, 6, 5, 6);
+            MoveBtn.Location = new Point(283, 259);
             MoveBtn.Name = "MoveBtn";
-            MoveBtn.Size = new Size(156, 56);
+            MoveBtn.Size = new Size(116, 29);
             MoveBtn.TabIndex = 13;
-            MoveBtn.Text = "Move";
+            MoveBtn.Text = "Move(dont use)";
             MoveBtn.UseVisualStyleBackColor = true;
             MoveBtn.Click += MoveBtn_Click;
             // 
             // MainForm
             // 
-            AutoScaleDimensions = new SizeF(12F, 30F);
+            AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(710, 900);
+            ClientSize = new Size(414, 450);
             Controls.Add(MoveBtn);
             Controls.Add(StartBtn);
             Controls.Add(ViewBtn);
@@ -174,11 +165,11 @@
             Controls.Add(treeView);
             Controls.Add(CreateDirBtn);
             Controls.Add(CreateFileBtn);
-            Margin = new Padding(5, 6, 5, 6);
             Name = "MainForm";
             Text = "FileSystem";
             Load += MainForm_Load;
             ResumeLayout(false);
+            PerformLayout();
         }
 
         #endregion

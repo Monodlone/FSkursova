@@ -43,7 +43,6 @@
 
         private void EditBtn_Click(object sender, EventArgs e)
         {
-            //if FileToInteract == null we shouldn't even be here
             var fileParent = MainForm.FileToInteract!.Parent;
             FileSystem.DeleteObject(MainForm.FileToInteract);
             ObjectName = nameTxtBox.Text;

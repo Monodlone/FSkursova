@@ -5,7 +5,7 @@ using Kursova.Forms;
 namespace Kursova
 {
     //TODO DON'T DEPEND ON TREEVIEW
-    //read dir contents without using TreeView only sector offset
+    //MoveBtn method relies on treeview for everything
     //be able to resume the filesystem after closing and opening the project
 
     internal static class FileSystem
@@ -42,6 +42,8 @@ namespace Kursova
 
             RootOffset = BitmapSectors * _sectorSize + 1;
             Stream.Position = RootOffset;
+            Bw.Write(false);
+            Bw.Write((long)-1);
             Bw.Write("Root");
             Stream.Position = RootOffset + (_sectorSize - sizeof(long));
             Bw.Write((long)-1);
@@ -79,8 +81,9 @@ namespace Kursova
 
                 Stream.Position = writeOffset;
                 Bw.Write(true);
+                Bw.Write((long)MainForm.CWD.Tag);
                 Bw.Write(fileName.ToCharArray());
-                Stream.Position = writeOffset + 1 + NameLength;
+                Stream.Position = writeOffset + 1 + 8 + NameLength;
 
                 if (fileContents != null)
                     Bw.Write(fileContents.ToCharArray());
@@ -96,7 +99,8 @@ namespace Kursova
                 if (MainForm.CWD.ForeColor == MainForm.BadObjColor)
                     MainForm.ChangeToRootWhenCwdBad();
 
-                MainForm.AddTreeviewNodes(fileName, writeOffset, true);
+                MainForm.ResetParentDir(MainForm.CWD);
+                ReadDirectory(GetParentOffset(writeOffset));
             }
         }
 
@@ -110,8 +114,9 @@ namespace Kursova
             var writeOffset = Bitmap.FindFreeSector(Br, (int)BitmapSectors, (int)_sectorSize);
             Stream.Position = writeOffset;
             Bw.Write(false);
+            Bw.Write((long)MainForm.CWD.Tag);
             Bw.Write(dirName.ToCharArray());
-            Stream.Position = writeOffset + 1 + NameLength;
+            Stream.Position = writeOffset + 1 + 8 + NameLength;
 
             UpdateDir(writeOffset, MainForm.CWD);
             Stream.Position = writeOffset + _sectorSize - sizeof(long);
@@ -120,7 +125,8 @@ namespace Kursova
             ParityCheck.WriteParityBit(writeOffset, _sectorSize);
             UpdateBitmap();
 
-            MainForm.AddTreeviewNodes(dirName, writeOffset, false);
+            MainForm.ResetParentDir(MainForm.CWD);
+            ReadDirectory(GetParentOffset(writeOffset));
         }
 
         internal static string[]? ReadFile(long offset)
@@ -129,13 +135,14 @@ namespace Kursova
                 return null;
 
             var info = new string[2];
-            Stream.Position = offset + 1;
+            //skip metadata
+            Stream.Position = offset + 1 + 8;
 
             info[0] = MyToString(Br.ReadChars(NameLength));
 
             var contents = "";
             long nextSector = 0;
-            var readLength = (int)_sectorSize - 1 - NameLength - 1 - sizeof(long);
+            var readLength = (int)_sectorSize - 1 - 8 - NameLength - 1 - sizeof(long);
             while (nextSector != -1)
             {
                 contents += MyToString(Br.ReadChars(readLength));
@@ -164,8 +171,9 @@ namespace Kursova
             if (!ParityCheck.CheckSectorIntegrity(offset, _sectorSize))
                 return;
 
-            //skip name and read each offset inside 
-            Stream.Position = offset + 1 + NameLength;
+            MainForm.ResetParentDir(MainForm.CWD);
+            //skip metadata and read each offset inside 
+            Stream.Position = offset + 1 + 8 + NameLength;
             var currOffsetBytes = Br.ReadBytes(sizeof(long));
             var currOffset = BitConverter.ToInt64(currOffsetBytes , 0);
             var counter = 1;//keep track of offsets
@@ -184,7 +192,7 @@ namespace Kursova
                     //go to offset and read first byte and name
                     Stream.Position = currOffset;
                     var fByte = Br.ReadByte();
-
+                    Stream.Position += 8;
                     //Read name, create node and add to treeview
                     if (fByte == 1) //File
                     {
@@ -197,7 +205,8 @@ namespace Kursova
                         MainForm.AddTreeviewNodes(dirName, currOffset, false);
                     }
 
-                    Stream.Position = offset + 1 + NameLength + (counter++ * 8);
+                    Stream.Position = offset + 1 + 8 + NameLength + (counter * 8);
+                    counter++;
                     currOffsetBytes = Br.ReadBytes(sizeof(long));
                     currOffset = BitConverter.ToInt64(currOffsetBytes, 0);
                 }
@@ -208,6 +217,17 @@ namespace Kursova
 
         internal static long GetRootOffset() => RootOffset;
 
+        internal static long GetParentOffset(long offset)
+        {
+            if (offset == RootOffset)
+                return -1;
+
+            Stream.Position = offset + 1;
+            var parentBytes = Br.ReadBytes(sizeof(long));
+            return BitConverter.ToInt64(parentBytes, 0);;
+        }
+
+        //for moving files from one dir to another
         internal static void RemoveOffsetFromParent(long fileOffset, long parentOffset)
         {
             //scan all offsets until it finds fileOffset
@@ -231,18 +251,20 @@ namespace Kursova
 
         internal static void UpdateDir(long fileOffset, TreeNode cwd)
         {
-            if (!ParityCheck.CheckSectorIntegrity((long)cwd.Tag, _sectorSize))
+            var parentOffset = GetParentOffset(fileOffset);
+            if (!ParityCheck.CheckSectorIntegrity(parentOffset, _sectorSize))
             {
                 cwd.ForeColor = MainForm.BadObjColor;
                 cwd = MainForm.RootNode;
                 //check root too before continuing
-                if (!ParityCheck.CheckSectorIntegrity((long)cwd.Tag, _sectorSize))
+                if (!ParityCheck.CheckSectorIntegrity(parentOffset, _sectorSize))
                 {
                     MessageBox.Show("Fatal Error: Root is corrupted");
                     throw new ArgumentException("Fatal Error: Root is corrupted");
                 }
             }
-            Stream.Position = (long)cwd.Tag + cwd.Text.Length + 1;
+
+            Stream.Position = parentOffset + 1 + 8 + NameLength;
             var isFull = false;
             for (var i = 0; i < _sectorSize/sizeof(long) - sizeof(long); i++)
             {
@@ -251,6 +273,7 @@ namespace Kursova
                     isFull = true;
                 if (BitConverter.ToInt64(bytes , 0) != 0)
                     continue;
+
                 break;
             }
 
@@ -262,7 +285,7 @@ namespace Kursova
             Stream.Position -= sizeof(long);
             Bw.Write(fileOffset);
             //delete old parity bit then calculate and write new one
-            ParityCheck.UpdateParityBitOfCWD((long)cwd.Tag, _sectorSize);
+            ParityCheck.UpdateParityBitOfCWD(parentOffset, _sectorSize);
         }
 
         internal static void DeleteObject(TreeNode? obj)
@@ -275,7 +298,7 @@ namespace Kursova
                 //dirs can have BadObjColor too so read first byte to make sure it's a file
                 (obj.ForeColor == MainForm.BadObjColor && Br.ReadByte() == 1))
             {
-                DeleteFile(objOffset, (long)obj.Parent.Tag, obj.Parent.Text.Length);
+                DeleteFile(objOffset);
                 UpdateBitmap();
                 MainForm.DeleteNode(obj);
             }
@@ -283,23 +306,23 @@ namespace Kursova
             else
             {
                 //check if dir empty.
-                var nameLength = obj.Text.Length;
-                if (IsDirEmpty(objOffset, nameLength))
+                if (IsDirEmpty(objOffset, NameLength))
                 {
                     //empty -> delete dir
+                    CleanParentDir(objOffset);
+
                     Stream.Position = objOffset;
-                    for (var i = 0; i < nameLength; i += sizeof(long))
+                    for (var i = 0; i < NameLength; i += sizeof(long))
                         Bw.Write((long)0);//long because 8bytes at a time -> fewer cycles
 
                     //clear end of sector value
                     Stream.Position = objOffset + _sectorSize - sizeof(long);
                     Bw.Write((long)0);
-                    CleanParentDir(objOffset, (long)obj.Parent.Tag, obj.Parent.Text.Length);
                 }
                 //not empty -> run DeleteFile with all offsets from directory
                 else
                 {
-                    var currPosition = objOffset + 1 + nameLength;
+                    var currPosition = objOffset + 1 + NameLength;
                     
                     while (true)//check if there are child dirs inside the curr dir
                     {
@@ -325,7 +348,9 @@ namespace Kursova
                         }
                     }
 
-                    currPosition = objOffset + 1 + nameLength;
+                    CleanParentDir(objOffset);
+
+                    currPosition = objOffset + 1 + NameLength;
                     while (true)
                     {
                         Stream.Position = currPosition;
@@ -338,20 +363,19 @@ namespace Kursova
                         if (fileOffset <= -1)//end of sector
                             break;
 
-                        DeleteFile(fileOffset, (long)obj.Parent.Tag, obj.Parent.Text.Length);
+                        DeleteFile(fileOffset);
                     }
                     //delete dir
                     Stream.Position = objOffset;
                     for (var i = 0; i < _sectorSize; i += sizeof(long))
                         Bw.Write((long)0);
-                    CleanParentDir(objOffset, (long)obj.Parent.Tag, obj.Parent.Text.Length);
                 }
                 UpdateBitmap();
                 MainForm.DeleteNode(obj);
             }
         }
 
-        private static void DeleteFile(long fileOffset, long parentOffset, int parentNameLength)
+        private static void DeleteFile(long fileOffset)
         {
             if (fileOffset < RootOffset)
                 return;
@@ -369,6 +393,10 @@ namespace Kursova
                 offsets[indx++] = nextSector;
                 Stream.Position = nextSector + (_sectorSize - sizeof(long));
             }
+
+            //delete offset from parent directory
+            CleanParentDir(fileOffset);
+
             //replace sectors with 0 bytes
             foreach (var currOffset in offsets)
             {
@@ -376,15 +404,13 @@ namespace Kursova
                 for (var i = 0; i < _sectorSize; i += sizeof(long))
                     Bw.Write((long)0);//long because 8bytes at a time -> fewer cycles
             }
-            //delete offset from parent directory
-            CleanParentDir(fileOffset, parentOffset, parentNameLength);
         }
 
         private static bool IsDirEmpty(long offset, int nameLength)
         {
-            Stream.Position = offset + nameLength + 1;
+            Stream.Position = offset + 1 + 8 + NameLength;
             //stream is between name and parity bit
-            while (Stream.Position < offset + (_sectorSize - nameLength - 1 - sizeof(long)))
+            while (Stream.Position < offset + (_sectorSize - 1 - 8 - NameLength - 1 - sizeof(long)))
             {
                 var currBytes = Br.ReadBytes(sizeof(long));
                 var value = BitConverter.ToInt64(currBytes , 0);
@@ -396,21 +422,20 @@ namespace Kursova
             return true;
         }
 
-        private static void CleanParentDir(long objOffset, long parentOffset, int parentNameLength)
+        private static void CleanParentDir(long objOffset)
         {
+            var parentOffset = GetParentOffset(objOffset);
             //read dir and search for offset and delete it
-            Stream.Position = parentOffset + parentNameLength + 1;
-            while (Stream.Position < objOffset + (_sectorSize - 1 - parentNameLength - sizeof(long)))
+            Stream.Position = parentOffset + 1 + 8 + NameLength;
+            while (Stream.Position < objOffset + (_sectorSize - 1 - 8 - NameLength - 1 - sizeof(long)))
             {
                 var currBytes = Br.ReadBytes(sizeof(long));
                 var value = BitConverter.ToInt64(currBytes , 0);
                 if (value != objOffset)
                     continue;
-                else
-                {
-                    Stream.Position -= sizeof(long);
-                    Bw.Write((long)0);
-                }
+
+                Stream.Position -= sizeof(long);
+                Bw.Write((long)0);
             }
             ParityCheck.UpdateParityBitOfCWD(parentOffset, _sectorSize);
         }
@@ -423,8 +448,9 @@ namespace Kursova
             var strings = SplitString(fileContents, requiredSectors);
             Stream.Position = writeOffsets[0];
             Bw.Write(true);
+            Bw.Write((long)MainForm.CWD.Tag);
             Bw.Write(fileName.ToCharArray());
-            Stream.Position = writeOffsets[0] + 1 + NameLength;
+            Stream.Position = writeOffsets[0] + 1 + 8 + NameLength;
 
             for (var i = 0; i < requiredSectors; i++)
             {
@@ -449,7 +475,8 @@ namespace Kursova
             if (MainForm.CWD.ForeColor == MainForm.BadObjColor)
                 MainForm.ChangeToRootWhenCwdBad();
 
-            MainForm.AddTreeviewNodes(fileName, writeOffsets[0], true);
+            MainForm.ResetParentDir(MainForm.CWD);
+            ReadDirectory(GetParentOffset(writeOffsets[0]));
         }
 
         private static string[] SplitString(string str, int requiredSectors)
