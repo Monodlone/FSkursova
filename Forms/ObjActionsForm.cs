@@ -2,7 +2,7 @@
 {
     public partial class ObjActionsForm : Form
     {
-        private static string? FileName { get; set; }
+        private static string? ObjectName { get; set; }
         private static string? FileContents { get; set; }
         private static bool IsFile { get; set; }
         private bool IsEditing { get; set; }
@@ -32,13 +32,13 @@
                 return;
             }
             EditBtn.Visible = false;
-            FileName = nameTxtBox.Text;
+            ObjectName = nameTxtBox.Text;
             FileContents = contentsTextbox.Text;
             Close();
             if (IsFile)
-                FileSystem.CreateFile(FileName, FileContents);
+                FileSystem.CreateFile(ObjectName, FileContents);
             else
-                FileSystem.CreateDirectory(FileName);
+                FileSystem.CreateDirectory(ObjectName);
         }
 
         private void EditBtn_Click(object sender, EventArgs e)
@@ -46,11 +46,11 @@
             //if FileToInteract == null we shouldn't even be here
             var fileParent = MainForm.FileToInteract!.Parent;
             FileSystem.DeleteObject(MainForm.FileToInteract);
-            FileName = nameTxtBox.Text;
+            ObjectName = nameTxtBox.Text;
             FileContents = contentsTextbox.Text;
             Close();
             MainForm.ChangeCWDForFileEditing(fileParent);
-            FileSystem.CreateFile(FileName, FileContents);
+            FileSystem.CreateFile(ObjectName, FileContents);
         }
 
         private void ObjActionsForm_Load(object sender, EventArgs e)
@@ -70,13 +70,16 @@
             nameTxtBox.ReadOnly = IsViewing;
         }
 
-        private void nameTxtBox_KeyPress(object sender, KeyPressEventArgs e) => e.Handled = !IsValidCharacter(e.KeyChar);
+        private void nameTxtBox_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            e.Handled = !IsValidCharacter(e.KeyChar);
+        }
 
         private bool IsValidCharacter(char ch)
         {
             var lower = ch >= 'a' && ch <= 'z';
             var upper = ch >= 'A' && ch <= 'Z';
-            return lower || upper || ch == 8;//backspace
+            return (lower || upper || ch == 8) && (nameTxtBox.Text.Length <= 15 || ch == 8);//ch == 8 -> backspace
         }
     }
 }

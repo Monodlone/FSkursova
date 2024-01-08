@@ -99,7 +99,7 @@ namespace Kursova.Forms
             }
 
             var objActionsForm = new ObjActionsForm(true, false, true);
-            var fileInfo = FileSystem.ReadFile((long)FileToInteract.Tag, FileToInteract.Text);
+            var fileInfo = FileSystem.ReadFile((long)FileToInteract.Tag);
             if (fileInfo == null)
             {
                 FileToInteract.ForeColor = BadObjColor;
@@ -126,7 +126,7 @@ namespace Kursova.Forms
             }
 
             var objActionsForm = new ObjActionsForm(true, true, false);
-            var fileInfo = FileSystem.ReadFile((long)FileToInteract.Tag, FileToInteract.Text);
+            var fileInfo = FileSystem.ReadFile((long)FileToInteract.Tag);
             if (fileInfo == null)
             {
                 FileToInteract.ForeColor = BadObjColor;
@@ -148,7 +148,7 @@ namespace Kursova.Forms
 
             var svFileDialog = new SaveFileDialog();
             svFileDialog.Filter = "txt files (*.txt)|*.txt";
-            var info = FileSystem.ReadFile((long)FileToInteract.Tag, FileToInteract.Text);
+            var info = FileSystem.ReadFile((long)FileToInteract.Tag);
             svFileDialog.FileName = info[0];
             if (svFileDialog.ShowDialog() == DialogResult.OK)
             {

@@ -3,6 +3,10 @@ using Kursova.Forms;
 
 namespace Kursova
 {
+    //TODO DON'T DEPEND ON TREEVIEW
+    //read dir contents without using TreeView only sector offset
+    //be able to resume the filesystem after closing and opening the project
+
     internal static class FileSystem
     {
         private static readonly FileStream Stream = File.Create("C:\\Users\\PiwKi\\Desktop\\fs_file");
@@ -15,6 +19,8 @@ namespace Kursova
         private static long _sectorSize;
         private static long _totalSize;
         private static long _bitmapSize;
+
+        private const int NameLength = 15;
 
         internal static void Initiate(long sectorSize, long sectorCount)
         {
@@ -50,7 +56,7 @@ namespace Kursova
             //at end of sector write address of next sector of contents or special value if no next
             //save file offset to Root
             //update the bitmap
-            long fileSize = 1 + fileName.Length + fileContents.Length;
+            long fileSize = 1 + NameLength + fileContents.Length;
             var requiredSectors = 1;
             var counter = 0;
             while (fileSize > _sectorSize - 1 - sizeof(long))
@@ -73,6 +79,7 @@ namespace Kursova
                 Stream.Position = writeOffset;
                 Bw.Write(true);
                 Bw.Write(fileName.ToCharArray());
+                Stream.Position = writeOffset + 1 + NameLength;
 
                 if (fileContents != null)
                     Bw.Write(fileContents.ToCharArray());
@@ -103,6 +110,7 @@ namespace Kursova
             Stream.Position = writeOffset;
             Bw.Write(false);
             Bw.Write(dirName.ToCharArray());
+            Stream.Position = writeOffset + 1 + NameLength;
 
             UpdateDir(writeOffset, MainForm.CWD);
             Stream.Position = writeOffset + _sectorSize - sizeof(long);
@@ -110,6 +118,7 @@ namespace Kursova
 
             ParityCheck.WriteParityBit(writeOffset, _sectorSize);
             UpdateBitmap();
+
             MainForm.AddTreeviewNodes(dirName, writeOffset, false);
         }
 
@@ -117,7 +126,7 @@ namespace Kursova
 
         internal static long GetRootOffset() => RootOffset;
 
-        internal static string[]? ReadFile(long offset, string fileName)
+        internal static string[]? ReadFile(long offset)
         {
             if (!ParityCheck.CheckSectorIntegrity(offset, _sectorSize))
                 return null;
@@ -125,11 +134,11 @@ namespace Kursova
             var info = new string[2];
             Stream.Position = offset + 1;
 
-            info[0] = MyToString(Br.ReadChars(fileName.Length));
+            info[0] = MyToString(Br.ReadChars(NameLength));
 
             var contents = "";
             long nextSector = 0;
-            var readLength = (int)_sectorSize - 1 - fileName.Length - 1 - sizeof(long);
+            var readLength = (int)_sectorSize - 1 - NameLength - 1 - sizeof(long);
             while (nextSector != -1)
             {
                 contents += MyToString(Br.ReadChars(readLength));
@@ -143,7 +152,7 @@ namespace Kursova
                 Stream.Position = nextSector;
                 readLength = (int)_sectorSize - 1 - sizeof(long);
             }
-            info[1] = CutString(contents);
+            info[1] = MyCutString(contents);
             return info;
         }
 
@@ -359,10 +368,11 @@ namespace Kursova
             if (fileName == null) return;
 
             var writeOffsets = Bitmap.FindFreeSectors(Br, requiredSectors, (int)BitmapSectors, (int)_sectorSize);
-            var strings = SplitString(fileContents, fileName.Length, requiredSectors);
+            var strings = SplitString(fileContents, requiredSectors);
             Stream.Position = writeOffsets[0];
             Bw.Write(true);
             Bw.Write(fileName.ToCharArray());
+            Stream.Position = writeOffsets[0] + 1 + NameLength;
 
             for (var i = 0; i < requiredSectors; i++)
             {
@@ -390,13 +400,13 @@ namespace Kursova
             MainForm.AddTreeviewNodes(fileName, writeOffsets[0], true);
         }
 
-        private static string[] SplitString(string str, int nameSize, int requiredSectors)
+        private static string[] SplitString(string str, int requiredSectors)
         {
             var strs = new string[requiredSectors];
             var firstPart = "";
             var indx = 0;
             int i;
-            for (i = 0; i < _sectorSize - nameSize - sizeof(long) - 2; i++)
+            for (i = 0; i < _sectorSize - NameLength - sizeof(long) - 2; i++)
                 firstPart += str[i];
             strs[indx++] = firstPart;
 
@@ -425,10 +435,10 @@ namespace Kursova
             var str = "";
             foreach (var ch in chars)
                 str += ch;
-            return str;
+            return MyCutString(str);
         }
 
-        private static string CutString(string str)
+        private static string MyCutString(string str)
         {
             //remove trailing empty bytes
             var cutStr = "";
