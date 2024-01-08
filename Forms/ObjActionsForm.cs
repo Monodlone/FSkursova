@@ -79,7 +79,7 @@
         {
             var lower = ch >= 'a' && ch <= 'z';
             var upper = ch >= 'A' && ch <= 'Z';
-            return (lower || upper || ch == 8) && (nameTxtBox.Text.Length <= 15 || ch == 8);//ch == 8 -> backspace
+            return (lower || upper || ch == 8) && (nameTxtBox.Text.Length <= FileSystem.NameLength || ch == 8);//ch == 8 -> backspace
         }
     }
 }

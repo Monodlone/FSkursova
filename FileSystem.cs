@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using System.Xml.Linq;
 using Kursova.Forms;
 
 namespace Kursova
@@ -20,7 +21,7 @@ namespace Kursova
         private static long _totalSize;
         private static long _bitmapSize;
 
-        private const int NameLength = 15;
+        internal const int NameLength = 14;
 
         internal static void Initiate(long sectorSize, long sectorCount)
         {
@@ -122,10 +123,6 @@ namespace Kursova
             MainForm.AddTreeviewNodes(dirName, writeOffset, false);
         }
 
-        internal static FileStream GetStream() => Stream;
-
-        internal static long GetRootOffset() => RootOffset;
-
         internal static string[]? ReadFile(long offset)
         {
             if (!ParityCheck.CheckSectorIntegrity(offset, _sectorSize))
@@ -156,12 +153,67 @@ namespace Kursova
             return info;
         }
 
-        internal static void RemoveOffsetFromParent(long fileOffset, TreeNode parentNode, long parentOffset, int parentNameLength)
+        internal static void ReadDirectory(long offset)
+        {
+            //check first byte if there is a dir at offset
+            Stream.Position = offset;
+            var firstByte = Br.ReadByte();
+            if (firstByte != 0)//not a dir
+                return;
+
+            if (!ParityCheck.CheckSectorIntegrity(offset, _sectorSize))
+                return;
+
+            //skip name and read each offset inside 
+            Stream.Position = offset + 1 + NameLength;
+            var currOffsetBytes = Br.ReadBytes(sizeof(long));
+            var currOffset = BitConverter.ToInt64(currOffsetBytes , 0);
+            var counter = 1;//keep track of offsets
+
+            while (currOffset != -256 && currOffset != -255)
+            {
+                if (currOffset == 0)//empty space
+                {
+                    //go to next 8 bytes
+                    Stream.Position = offset + 1 + NameLength + (counter++ * 8);
+                    currOffsetBytes = Br.ReadBytes(sizeof(long));
+                    currOffset = BitConverter.ToInt64(currOffsetBytes, 0);
+                }
+                else
+                {
+                    //go to offset and read first byte and name
+                    Stream.Position = currOffset;
+                    var fByte = Br.ReadByte();
+
+                    //Read name, create node and add to treeview
+                    if (fByte == 1) //File
+                    {
+                        var fileName = MyToString(Br.ReadChars(NameLength));
+                        MainForm.AddTreeviewNodes(fileName, currOffset, true);
+                    }
+                    else if (fByte == 0) //Directory
+                    {
+                        var dirName = MyToString(Br.ReadChars(NameLength));
+                        MainForm.AddTreeviewNodes(dirName, currOffset, false);
+                    }
+
+                    Stream.Position = offset + 1 + NameLength + (counter++ * 8);
+                    currOffsetBytes = Br.ReadBytes(sizeof(long));
+                    currOffset = BitConverter.ToInt64(currOffsetBytes, 0);
+                }
+            }
+        }
+
+        internal static FileStream GetStream() => Stream;
+
+        internal static long GetRootOffset() => RootOffset;
+
+        internal static void RemoveOffsetFromParent(long fileOffset, long parentOffset)
         {
             //scan all offsets until it finds fileOffset
             //replace with (long)0
-            Stream.Position = parentOffset + parentNameLength + 1;
-            for (var i = parentNameLength; i < _sectorSize - sizeof(long); i+=sizeof(long))
+            Stream.Position = parentOffset + NameLength + 1;
+            for (var i = NameLength; i < _sectorSize - sizeof(long); i+=sizeof(long))
             {
                 var currOffsetBytes = Br.ReadBytes(sizeof(long));
                 var currOffset = BitConverter.ToInt64(currOffsetBytes, 0);

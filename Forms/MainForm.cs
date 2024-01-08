@@ -55,6 +55,7 @@ namespace Kursova.Forms
                 CWD = currNode;
                 LastSelectedFile = FileToInteract;
                 FileToInteract = null;
+                FileSystem.ReadDirectory((long)CWD.Tag);
             }
             else //if (currNode.ForeColor == fileColor)//Green == File
                 FileToInteract = currNode;
@@ -91,7 +92,15 @@ namespace Kursova.Forms
 
         private void ViewBtn_Click(object sender, EventArgs e)
         {
-            if (FileToInteract == null) return;
+            if (CWD.IsExpanded == false)
+            {
+                FileSystem.ReadDirectory((long)CWD.Tag);
+                CWD.Expand();
+            }
+
+            if (FileToInteract == null)
+                return;
+
             if (FileToInteract.ForeColor == Color.Red)
             {
                 MessageBox.Show("Error: Object is corrupted");
@@ -209,7 +218,6 @@ namespace Kursova.Forms
 
         private void treeView_MouseMove(object sender, MouseEventArgs e)
         {
-            RootNode.Expand();
             //keep last selected node highlighted
             if (treeView.SelectedNode != null)
                 treeView.SelectedNode.Checked = true;
@@ -233,8 +241,7 @@ namespace Kursova.Forms
             //get node tag
             var fileOffset = (long)LastSelectedFile.Tag;
             //remove tag from current parent dir
-            FileSystem.RemoveOffsetFromParent(fileOffset, LastSelectedFile.Parent,
-                                    (long)LastSelectedFile.Parent.Tag, LastSelectedFile.Parent.Text.Length);
+            FileSystem.RemoveOffsetFromParent(fileOffset, (long)LastSelectedFile.Parent.Tag);
             //write tag to new parent dir
             FileSystem.UpdateDir(fileOffset, CWD);
             //move node to new parent dir in tree view
