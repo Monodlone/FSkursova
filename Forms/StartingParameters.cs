@@ -1,6 +1,4 @@
-﻿using System.Text;
-
-namespace Kursova.Forms
+﻿namespace Kursova.Forms
 {
     public partial class StartingParameters : Form
     {

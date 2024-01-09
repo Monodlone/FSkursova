@@ -48,6 +48,7 @@
             ObjectName = nameTxtBox.Text;
             FileContents = contentsTextbox.Text;
             Close();
+
             MainForm.ChangeCWDForFileEditing(fileParent);
             FileSystem.CreateFile(ObjectName, FileContents);
         }

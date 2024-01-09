@@ -1,13 +1,11 @@
-﻿using System.Text;
+﻿using System.Diagnostics.Metrics;
+using System.Text;
 using Kursova.Forms;
 
 namespace Kursova
 {
     //TODO DON'T DEPEND ON TREEVIEW
-    //writing metadata is buggy maybe it gets overwritten somewhere, or I don't write ot correctly
-    //resuming is buggy because if above issue
-    //root gets corrupted randomly(parity probably is fine)
-    //root gets corrupted -> end session and resume it -> metadata gets deleted but root works -> cant resume anymore
+    //
 
     internal static class FileSystem
     {
@@ -21,7 +19,9 @@ namespace Kursova
         private static long _sectorSize;
         private static long _totalSize;
         private static long _bitmapSize;
+        private static readonly MyDictionary Items = new();
 
+        internal static long CWDOffset { get; set; }
         internal const int NameLength = 14;
 
         internal static void Initiate(long sectorSize, long sectorCount, bool restore)
@@ -33,7 +33,7 @@ namespace Kursova
 
             if (restore)
             {
-                Stream = File.Open("fsFile", FileMode.OpenOrCreate);
+                Stream = File.Open("fsFile", FileMode.Open);
                 Bw = new BinaryWriter(Stream, Encoding.UTF8, true);
                 Br = new BinaryReader(Stream, Encoding.UTF8, true);
             }
@@ -58,6 +58,7 @@ namespace Kursova
             }
 
             RootOffset = BitmapSectors * _sectorSize + 1;
+            CWDOffset = RootOffset;
             if (restore)
             {
                 Stream.Position = RootOffset + 1 + sizeof(long);
@@ -78,12 +79,32 @@ namespace Kursova
                 MainForm.InitRoot(rootNode);
                 UpdateBitmap();
                 ParityCheck.WriteParityBit(RootOffset, _sectorSize);
+
+                Items.Add("Root", RootOffset);
             }
         }
 
         internal static void CreateFile(string? fileName, string fileContents)
         {
-            if (fileName == null) return;
+            if (fileName == null)
+                return;
+
+            //override old file with new one with same name
+            if (Items.ContainsKey(fileName))
+            {
+               var offset = Items.GetValue(fileName);
+               Stream.Position = offset;
+               var firstByte = Br.ReadByte();
+
+               var offsetFromBack = Items.GetValueBackwards(fileName);
+               Stream.Position = offsetFromBack;
+               var firstByteFromBack = Br.ReadByte();
+
+               if (firstByte == 1)
+                   DeleteFile(offset);
+               else if (firstByteFromBack == 1)
+                   DeleteFile(offsetFromBack);
+            }
             //find free sector using bitmap
             //change stream position to the free sector
             //write file name and contents using Bw
@@ -112,7 +133,7 @@ namespace Kursova
 
                 Stream.Position = writeOffset;
                 Bw.Write(true);
-                Bw.Write((long)MainForm.CWD.Tag);
+                Bw.Write(CWDOffset);
                 Bw.Write(MyToCharArray(fileName));
                 Stream.Position = writeOffset + 1 + 8 + NameLength;
 
@@ -132,20 +153,48 @@ namespace Kursova
 
                 MainForm.ResetParentDir(MainForm.CWD);
                 ReadDirectory(GetParentOffset(writeOffset));
+
+                Items.Add(fileName, writeOffset);
             }
         }
 
         internal static void CreateDirectory(string? dirName)
         {
-            if (dirName == null) return;
+            if (dirName == null)
+                return;
+
+            if (Items.ContainsKey(dirName))
+            {
+                var offset = Items.GetValue(dirName);
+                Stream.Position = offset;
+                var firstByte = Br.ReadByte();
+
+                var offsetFromBack = Items.GetValueBackwards(dirName);
+                Stream.Position = offsetFromBack;
+                var firstByteFromBack = Br.ReadByte();
+
+                if (firstByte == 0)
+                {
+                    MessageBox.Show("Error: Directory with the same name already exists");
+                    return;
+                }
+
+                if (firstByteFromBack == 0)
+                {
+                    MessageBox.Show("Error: Directory with the same name already exists");
+                    return;
+                }
+            }
+
             //find free sector
             //change stream position to it
             //write true byte and dir name
             //update the bitmap
             var writeOffset = Bitmap.FindFreeSector(Br, (int)BitmapSectors, (int)_sectorSize);
+            Items.Add(dirName, writeOffset);
             Stream.Position = writeOffset;
             Bw.Write(false);
-            Bw.Write((long)MainForm.CWD.Tag);
+            Bw.Write(CWDOffset);
             Bw.Write(MyToCharArray(dirName));
             Stream.Position = writeOffset + 1 + 8 + NameLength;
 
@@ -158,6 +207,7 @@ namespace Kursova
 
             MainForm.ResetParentDir(MainForm.CWD);
             ReadDirectory(GetParentOffset(writeOffset));
+
         }
 
         internal static string[]? ReadFile(long offset)
@@ -207,14 +257,15 @@ namespace Kursova
             Stream.Position = offset + 1 + 8 + NameLength;
             var currOffsetBytes = Br.ReadBytes(sizeof(long));
             var currOffset = BitConverter.ToInt64(currOffsetBytes , 0);
-            var counter = 1;//keep track of offsets
+            var counter = 2;//keep track of offsets
 
             while (currOffset != -256 && currOffset != -255)
             {
                 if (currOffset == 0)//empty space
                 {
                     //go to next 8 bytes
-                    Stream.Position = offset + 1 + NameLength + (counter++ * 8);
+                    Stream.Position = offset + 1 + NameLength + (counter * 8);
+                    counter++;
                     currOffsetBytes = Br.ReadBytes(sizeof(long));
                     currOffset = BitConverter.ToInt64(currOffsetBytes, 0);
                 }
@@ -236,7 +287,7 @@ namespace Kursova
                         MainForm.AddTreeviewNodes(dirName, currOffset, false);
                     }
 
-                    Stream.Position = offset + 1 + 8 + NameLength + (counter * 8);
+                    Stream.Position = offset + 1 + 8 + NameLength + ((counter - 1) * 8);
                     counter++;
                     currOffsetBytes = Br.ReadBytes(sizeof(long));
                     currOffset = BitConverter.ToInt64(currOffsetBytes, 0);
@@ -286,6 +337,8 @@ namespace Kursova
             {
                 cwd.ForeColor = MainForm.BadObjColor;
                 parentOffset = RootOffset;
+                Stream.Position = fileOffset + 1;
+                Bw.Write(parentOffset);
             }
 
             Stream.Position = parentOffset + 1 + 8 + NameLength;
@@ -321,98 +374,39 @@ namespace Kursova
 
         internal static void DeleteObject(TreeNode? obj)
         {
-            if (obj == null) return;
+            if (obj == null)
+                return;
+
             var objOffset = (long)obj.Tag;
             Stream.Position = objOffset;
+
             //File
             if (obj.ForeColor == MainForm.FileColor ||
                 //dirs can have BadObjColor too so read first byte to make sure it's a file
                 (obj.ForeColor == MainForm.BadObjColor && Br.ReadByte() == 1))
             {
                 DeleteFile(objOffset);
-                UpdateBitmap();
                 MainForm.DeleteNode(obj);
             }
             //Directory
             else
             {
-                //check if dir empty.
-                if (IsDirEmpty(objOffset, NameLength))
-                {
-                    //empty -> delete dir
-                    CleanParentDir(objOffset);
-
-                    Stream.Position = objOffset;
-                    for (var i = 0; i < NameLength; i += sizeof(long))
-                        Bw.Write((long)0);//long because 8bytes at a time -> fewer cycles
-
-                    //clear end of sector value
-                    Stream.Position = objOffset + _sectorSize - sizeof(long);
-                    Bw.Write((long)0);
-                }
-                //not empty -> run DeleteFile with all offsets from directory
-                else
-                {
-                    var currPosition = objOffset + 1 + NameLength;
-                    
-                    while (true)//check if there are child dirs inside the curr dir
-                    {
-                        Stream.Position = currPosition;
-                        currPosition += 8;
-                        if (currPosition <= _sectorSize - sizeof(long) - 1)
-                            break;
-                        var bytes = Br.ReadBytes(sizeof(long));
-                        var fileOffset = BitConverter.ToInt64(bytes , 0);
-
-                        if (fileOffset == 0)//empty space
-                            continue;
-                        if (fileOffset <= -1)//end of sector
-                            break;
-
-                        Stream.Position = fileOffset;
-                        var firstByte = Br.ReadByte();
-
-                        if (firstByte == 0)
-                        {
-                            MessageBox.Show("Error: Delete child directories first.");
-                            return;
-                        }
-                    }
-
-                    CleanParentDir(objOffset);
-
-                    currPosition = objOffset + 1 + NameLength;
-                    while (true)
-                    {
-                        Stream.Position = currPosition;
-                        currPosition += 8;
-                        var bytes = Br.ReadBytes(sizeof(long));
-                        var fileOffset = BitConverter.ToInt64(bytes , 0);
-
-                        if (fileOffset == 0)//empty space
-                            continue;
-                        if (fileOffset <= -1)//end of sector
-                            break;
-
-                        DeleteFile(fileOffset);
-                    }
-                    //delete dir
-                    Stream.Position = objOffset;
-                    for (var i = 0; i < _sectorSize; i += sizeof(long))
-                        Bw.Write((long)0);
-                }
-                UpdateBitmap();
+                DeleteDirectory(objOffset);
                 MainForm.DeleteNode(obj);
             }
+
+            UpdateBitmap();
         }
 
         private static void DeleteFile(long fileOffset)
         {
             if (fileOffset < RootOffset)
                 return;
+
             var offsets = new long[32]; 
             offsets[0] = fileOffset;
             Stream.Position = fileOffset + (_sectorSize - sizeof(long));
+
             //read sectors and save all offsets of the file
             long nextSector = 0;
             var indx = 1;
@@ -420,13 +414,17 @@ namespace Kursova
             {
                 var bytes = Br.ReadBytes(sizeof(long));
                 nextSector = BitConverter.ToInt64(bytes , 0);
-                if (nextSector == -1) break;
+                if (nextSector == -1 || nextSector == 0)
+                    break;
                 offsets[indx++] = nextSector;
                 Stream.Position = nextSector + (_sectorSize - sizeof(long));
             }
 
-            //delete offset from parent directory
+            //delete offset from parent directory and Items
             CleanParentDir(fileOffset);
+            Stream.Position = fileOffset + 1 + sizeof(long);
+            var fileName = MyToString(Br.ReadChars(NameLength));
+            Items.Remove(fileName, fileOffset);
 
             //replace sectors with 0 bytes
             foreach (var currOffset in offsets)
@@ -436,6 +434,83 @@ namespace Kursova
                 Stream.Position = currOffset;
                 for (var i = 0; i < _sectorSize; i += sizeof(long))
                     Bw.Write((long)0);//long because 8bytes at a time -> fewer cycles
+            }
+
+        }
+
+        private static void DeleteDirectory(long dirOffset)
+        {
+            //check if dir empty.
+            if (IsDirEmpty(dirOffset, NameLength))
+            {
+                //empty -> delete dir
+                CleanParentDir(dirOffset);
+                Stream.Position = dirOffset + 1 + sizeof(long);
+                var dirName = MyToString(Br.ReadChars(NameLength));
+                Items.Remove(dirName, dirOffset);
+
+                Stream.Position = dirOffset;
+                for (var i = 0; i < NameLength; i += sizeof(long))
+                    Bw.Write((long)0);//long because 8bytes at a time -> fewer cycles
+
+                //clear end of sector value
+                Stream.Position = dirOffset + _sectorSize - sizeof(long);
+                Bw.Write((long)0);
+
+            }
+            //not empty -> run DeleteFile with all offsets from directory
+            else
+            {
+                var currPosition = dirOffset + 1 + NameLength;
+                    
+                while (true)//check if there are child dirs inside the curr dir
+                {
+                    Stream.Position = currPosition;
+                    currPosition += 8;
+                    if (currPosition <= _sectorSize - sizeof(long) - 1)
+                        break;
+                    var bytes = Br.ReadBytes(sizeof(long));
+                    var fileOffset = BitConverter.ToInt64(bytes , 0);
+
+                    if (fileOffset == 0)//empty space
+                        continue;
+                    if (fileOffset <= -1)//end of sector
+                        break;
+
+                    Stream.Position = fileOffset;
+                    var firstByte = Br.ReadByte();
+
+                    if (firstByte == 0)
+                    {
+                        MessageBox.Show("Error: Delete child directories first.");
+                        return;
+                    }
+                }
+
+                CleanParentDir(dirOffset);
+                Stream.Position = dirOffset + 1 + sizeof(long);
+                var dirName = MyToString(Br.ReadChars(NameLength));
+                Items.Remove(dirName, dirOffset);
+
+                currPosition = dirOffset + 1 + NameLength;
+                while (true)
+                {
+                    Stream.Position = currPosition;
+                    currPosition += 8;
+                    var bytes = Br.ReadBytes(sizeof(long));
+                    var fileOffset = BitConverter.ToInt64(bytes , 0);
+
+                    if (fileOffset == 0)//empty space
+                        continue;
+                    if (fileOffset <= -1)//end of sector
+                        break;
+
+                    DeleteFile(fileOffset);
+                }
+                //delete dir
+                Stream.Position = dirOffset;
+                for (var i = 0; i < _sectorSize; i += sizeof(long))
+                    Bw.Write((long)0);
             }
         }
 
@@ -481,7 +556,7 @@ namespace Kursova
             var strings = SplitString(fileContents, requiredSectors);
             Stream.Position = writeOffsets[0];
             Bw.Write(true);
-            Bw.Write((long)MainForm.CWD.Tag);
+            Bw.Write(CWDOffset);
             Bw.Write(MyToCharArray(fileName));
             Stream.Position = writeOffsets[0] + 1 + 8 + NameLength;
 
@@ -510,6 +585,8 @@ namespace Kursova
 
             MainForm.ResetParentDir(MainForm.CWD);
             ReadDirectory(GetParentOffset(writeOffsets[0]));
+
+            Items.Add(fileName, writeOffsets[0]);
         }
 
         private static string[] SplitString(string str, int requiredSectors)

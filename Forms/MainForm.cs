@@ -61,6 +61,7 @@ namespace Kursova.Forms
             if (currNode.ForeColor == DirColor)//Red == Directory
             {
                 CWD = currNode;
+                FileSystem.CWDOffset = (long)CWD.Tag;
                 LastSelectedFile = FileToInteract;
                 FileToInteract = null;
             }
@@ -101,7 +102,7 @@ namespace Kursova.Forms
         {
             if (CWD.IsExpanded == false)
             {
-                FileSystem.ReadDirectory((long)CWD.Tag);
+                FileSystem.ReadDirectory(FileSystem.CWDOffset);
                 CWD.Expand();
                 return;
             }
@@ -246,16 +247,15 @@ namespace Kursova.Forms
 
             var fileOffset = (long)LastSelectedFile.Tag;
             var parentOffset = FileSystem.GetParentOffset(fileOffset);
-            var newParentOffset = (long)CWD.Tag;
 
-            if (parentOffset == newParentOffset)
+            if (parentOffset == FileSystem.CWDOffset)
                 return;
 
             //replace old parent offset with new one in file
             var stream = FileSystem.GetStream();
             stream.Position = fileOffset + 1;
             var bw = new BinaryWriter(stream, Encoding.UTF8);
-            bw.Write(newParentOffset);
+            bw.Write(FileSystem.CWDOffset);
             //bw.Close();
             //stream.Close();
             //remove file offset from old parent

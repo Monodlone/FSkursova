@@ -37,11 +37,16 @@ namespace Kursova
 
                 foreach (bool bit in bits)
                 {
-                    if (bit)
-                        continue;
+                    if (!bit)
+                    {
+                        // The first zero bit is found within the current byte
+                        writeOffset = i * 8 + freeBits;
+                        break;
+                    }
+    
                     freeBits++;
                 }
-                writeOffset = (i + 1) * 8 - freeBits;
+                //writeOffset = (i + 1) * 8 - freeBits;
 
                 if (writeOffset != -1)
                     break;
