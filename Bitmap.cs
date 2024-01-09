@@ -25,7 +25,7 @@ namespace Kursova
 
         internal static long FindFreeSector(BinaryReader br, int bitmapSectors, int sectorSize)
         {
-            br.BaseStream.Position = 0;
+            br.BaseStream.Position = sizeof(long) * 2 + 1;//skip metadata
             var writeOffset = -1;
             for (var i = 0; i < bitmapSectors * sectorSize; i++)
             {
@@ -45,8 +45,6 @@ namespace Kursova
 
                 if (writeOffset != -1)
                     break;
-                //scan byte for free bits
-                //number of free bit is number of free sector
             }
             if (writeOffset == -1)
                 return writeOffset;
@@ -56,7 +54,7 @@ namespace Kursova
 
         internal static long[] FindFreeSectors(BinaryReader br, int requiredSectors, int bitmapSectors, int sectorSize)
         {
-            br.BaseStream.Position = 0;
+            br.BaseStream.Position = sizeof(long) * 2 + 1;//skip metadata
             var offsets = new long[requiredSectors];
             var indx = 0;
             var byteNum = 0;

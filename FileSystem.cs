@@ -57,7 +57,7 @@ namespace Kursova
             RootOffset = BitmapSectors * _sectorSize + 1;
             if (restore)
             {
-                Stream.Position = RootOffset + 2 + sizeof(long);
+                Stream.Position = RootOffset + 1 + sizeof(long);
                 var rootName = MyToString(Br.ReadChars(NameLength));
 
                 var rootNode = new TreeNode(rootName) { Tag = RootOffset };
@@ -279,26 +279,27 @@ namespace Kursova
         internal static void UpdateDir(long fileOffset, TreeNode cwd)
         {
             var parentOffset = GetParentOffset(fileOffset);
+            //if target directory is corrupted switch to root
             if (!ParityCheck.CheckSectorIntegrity(parentOffset, _sectorSize))
             {
                 cwd.ForeColor = MainForm.BadObjColor;
-                cwd = MainForm.RootNode;
-                //check root too before continuing
-                if (!ParityCheck.CheckSectorIntegrity(parentOffset, _sectorSize))
-                {
-                    MessageBox.Show("Fatal Error: Root is corrupted");
-                    throw new ArgumentException("Fatal Error: Root is corrupted");
-                }
+                parentOffset = RootOffset;
             }
 
             Stream.Position = parentOffset + 1 + 8 + NameLength;
             var isFull = false;
-            for (var i = 0; i < _sectorSize/sizeof(long) - sizeof(long); i++)
+            for (var i = 1 + 8 + NameLength; i <= _sectorSize - sizeof(long) - 1; i += sizeof(long))
             {
                 var bytes = Br.ReadBytes(sizeof(long));
-                if (i == _sectorSize/sizeof(long) - sizeof(long) - 1 && BitConverter.ToInt64(bytes , 0) != 0)
+                var currOffset = BitConverter.ToInt64(bytes, 0);
+
+                if (i == _sectorSize / sizeof(long) - sizeof(long) - 1 && currOffset != 0)
+                {
                     isFull = true;
-                if (BitConverter.ToInt64(bytes , 0) != 0)
+                    break;
+                }
+
+                if (currOffset != 0)
                     continue;
 
                 break;
@@ -309,9 +310,10 @@ namespace Kursova
                 MessageBox.Show("Error: Directory is full");
                 return;
             }
+
             Stream.Position -= sizeof(long);
             Bw.Write(fileOffset);
-            //delete old parity bit then calculate and write new one
+            //delete old parity bit and write a new one
             ParityCheck.UpdateParityBitOfCWD(parentOffset, _sectorSize);
         }
 

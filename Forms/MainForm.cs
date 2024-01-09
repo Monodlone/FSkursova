@@ -2,9 +2,9 @@ namespace Kursova.Forms
 {
     public partial class MainForm : Form
     {
-        internal static TreeNode RootNode { get; private set;  }
         internal static TreeNode CWD { get; private set; }
         internal static TreeNode? FileToInteract { get; private set; }
+        private static TreeNode RootNode { get; set;  }
         private static TreeNode? LastSelectedFile { get; set; }
 
         internal static bool Restore { get; set; }
