@@ -5,7 +5,7 @@ using Kursova.Forms;
 namespace Kursova
 {
     //TODO DON'T DEPEND ON TREEVIEW
-    //
+    //TODO restore items after resuming
 
     internal static class FileSystem
     {
@@ -192,6 +192,7 @@ namespace Kursova
             //update the bitmap
             var writeOffset = Bitmap.FindFreeSector(Br, (int)BitmapSectors, (int)_sectorSize);
             Items.Add(dirName, writeOffset);
+
             Stream.Position = writeOffset;
             Bw.Write(false);
             Bw.Write(CWDOffset);
@@ -212,6 +213,7 @@ namespace Kursova
 
         internal static string[]? ReadFile(long offset)
         {
+            //if the file is in another dir and removed i have to delete the node before i get to here
             if (!ParityCheck.CheckSectorIntegrity(offset, _sectorSize))
                 return null;
 
@@ -378,21 +380,22 @@ namespace Kursova
                 return;
 
             var objOffset = (long)obj.Tag;
-            Stream.Position = objOffset;
-
+            //var objOffset = Items.GetValue
+            Stream.Position = objOffset + 1 + 8;
+            var objName = MyToString(Br.ReadChars(NameLength));
             //File
             if (obj.ForeColor == MainForm.FileColor ||
                 //dirs can have BadObjColor too so read first byte to make sure it's a file
                 (obj.ForeColor == MainForm.BadObjColor && Br.ReadByte() == 1))
             {
                 DeleteFile(objOffset);
-                MainForm.DeleteNode(obj);
+                MainForm.DeleteNode(objName);
             }
             //Directory
             else
             {
                 DeleteDirectory(objOffset);
-                MainForm.DeleteNode(obj);
+                MainForm.DeleteNode(objName);
             }
 
             UpdateBitmap();
@@ -425,6 +428,7 @@ namespace Kursova
             Stream.Position = fileOffset + 1 + sizeof(long);
             var fileName = MyToString(Br.ReadChars(NameLength));
             Items.Remove(fileName, fileOffset);
+            MainForm.DeleteNode(fileName);
 
             //replace sectors with 0 bytes
             foreach (var currOffset in offsets)
@@ -448,6 +452,7 @@ namespace Kursova
                 Stream.Position = dirOffset + 1 + sizeof(long);
                 var dirName = MyToString(Br.ReadChars(NameLength));
                 Items.Remove(dirName, dirOffset);
+                MainForm.DeleteNode(dirName);
 
                 Stream.Position = dirOffset;
                 for (var i = 0; i < NameLength; i += sizeof(long))
@@ -642,6 +647,21 @@ namespace Kursova
             for (var i = 0; i < str.Length; i++)
                 arr[i] = str[i];
             return arr;
+        }
+
+        private static TreeNode GetTreeNode(MyLinkedList<TreeNode> nodes, string name)
+        {
+            TreeNode currNode = null;
+            foreach (TreeNode node in nodes)
+            {
+                if (node.Text == name)
+                {
+                    currNode = node;
+                    break;
+                }
+            }
+
+            return currNode;
         }
     }
 }

@@ -40,12 +40,16 @@ namespace Kursova.Forms
 
         public static void AddTreeviewNodes(string name, long offset, bool isFile)
         {
-            //create node from file info
-            var node = new TreeNode(name) { ForeColor = isFile ? FileColor : DirColor, Tag = offset };
+            var node = new TreeNode(name) { ForeColor = isFile ? FileColor : DirColor, Tag = offset, Name = name};
             CWD.Nodes.Add(node);
         }
 
-        public static void DeleteNode(TreeNode node) => node.Remove();
+        public static void DeleteNode(string key)
+        {
+            var node = treeView.Nodes.Find(key, true);
+            //there is never more than one node with the same name
+            node[0].Remove();
+        } 
 
         internal static void ChangeToRootWhenCwdBad() => CWD = RootNode;
 
