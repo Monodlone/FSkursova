@@ -1,3 +1,5 @@
+using System.Text;
+
 namespace Kursova.Forms
 {
     public partial class MainForm : Form
@@ -241,15 +243,27 @@ namespace Kursova.Forms
         {
             if (LastSelectedFile == null)
                 return;
-            if (LastSelectedFile.Parent == CWD)
-                return;
-            //get node tag
+
             var fileOffset = (long)LastSelectedFile.Tag;
-            //remove tag from current parent dir
             var parentOffset = FileSystem.GetParentOffset(fileOffset);
+            var newParentOffset = (long)CWD.Tag;
+
+            if (parentOffset == newParentOffset)
+                return;
+
+            //replace old parent offset with new one in file
+            var stream = FileSystem.GetStream();
+            stream.Position = fileOffset + 1;
+            var bw = new BinaryWriter(stream, Encoding.UTF8);
+            bw.Write(newParentOffset);
+            //bw.Close();
+            //stream.Close();
+            //remove file offset from old parent
             FileSystem.RemoveOffsetFromParent(fileOffset, parentOffset);
-            //write tag to new parent dir
+
+            //write file offset to new parent dir
             FileSystem.UpdateDir(fileOffset, CWD);
+
             //move node to new parent dir in tree view
             LastSelectedFile.Remove();
             CWD.Nodes.Add(LastSelectedFile);

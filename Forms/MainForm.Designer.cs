@@ -144,9 +144,9 @@
             MoveBtn.Font = new Font("Segoe UI", 10F);
             MoveBtn.Location = new Point(283, 259);
             MoveBtn.Name = "MoveBtn";
-            MoveBtn.Size = new Size(116, 29);
+            MoveBtn.Size = new Size(91, 29);
             MoveBtn.TabIndex = 13;
-            MoveBtn.Text = "Move(dont use)";
+            MoveBtn.Text = "Move";
             MoveBtn.UseVisualStyleBackColor = true;
             MoveBtn.Click += MoveBtn_Click;
             // 
@@ -175,7 +175,6 @@
         #endregion
         private Button CreateFileBtn;
         private Button CreateDirBtn;
-        private static TreeView treeView;
         private Button EditBtn;
         private Button DeleteBtn;
         private Button ImportBtn;
@@ -183,5 +182,6 @@
         private Button ViewBtn;
         private Button StartBtn;
         private Button MoveBtn;
+        private static TreeView treeView;
     }
 }

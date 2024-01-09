@@ -4,7 +4,10 @@ using Kursova.Forms;
 namespace Kursova
 {
     //TODO DON'T DEPEND ON TREEVIEW
-    //MoveBtn method relies on treeview for everything
+    //writing metadata is buggy maybe it gets overwritten somewhere, or I don't write ot correctly
+    //resuming is buggy because if above issue
+    //root gets corrupted randomly(parity probably is fine)
+    //root gets corrupted -> end session and resume it -> metadata gets deleted but root works -> cant resume anymore
 
     internal static class FileSystem
     {
@@ -62,7 +65,6 @@ namespace Kursova
 
                 var rootNode = new TreeNode(rootName) { Tag = RootOffset };
                 MainForm.InitRoot(rootNode);
-                ParityCheck.WriteParityBit(RootOffset, _sectorSize);
             }
             else
             {
@@ -293,7 +295,7 @@ namespace Kursova
                 var bytes = Br.ReadBytes(sizeof(long));
                 var currOffset = BitConverter.ToInt64(bytes, 0);
 
-                if (i == _sectorSize / sizeof(long) - sizeof(long) - 1 && currOffset != 0)
+                if (i == _sectorSize - sizeof(long) - 1 && currOffset != 0)
                 {
                     isFull = true;
                     break;
@@ -429,6 +431,8 @@ namespace Kursova
             //replace sectors with 0 bytes
             foreach (var currOffset in offsets)
             {
+                if (currOffset == 0)
+                    break;
                 Stream.Position = currOffset;
                 for (var i = 0; i < _sectorSize; i += sizeof(long))
                     Bw.Write((long)0);//long because 8bytes at a time -> fewer cycles
@@ -532,11 +536,8 @@ namespace Kursova
             return strs;
         }
         
-        private static void UpdateBitmap()
-        {
-            Stream.Position = 0;
+        private static void UpdateBitmap() =>
             Bitmap.UpdateBitmap(new BinaryReader(Stream), (int)_sectorSize, (int)BitmapSectors, (int)_sectorCount, RootOffset);
-        }
 
         private static string MyToString(char[] chars)
         {

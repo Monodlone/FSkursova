@@ -1,4 +1,6 @@
-﻿namespace Kursova
+﻿using System.Text;
+
+namespace Kursova
 {
     //end of every data sector have a parity bit
     //when reading first CheckSectorIntegrity 
@@ -22,7 +24,7 @@
         internal static bool CheckSectorIntegrity(long offset, long sectorSize)
         {
             var stream = FileSystem.GetStream();
-            var br = new BinaryReader(stream);
+            var br = new BinaryReader(stream, Encoding.UTF8);
             stream.Position = offset;
 
             while (offset != -1)
