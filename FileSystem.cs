@@ -1,11 +1,23 @@
-﻿using System.Diagnostics.Metrics;
-using System.Text;
+﻿using System.Text;
 using Kursova.Forms;
 
 namespace Kursova
 {
     //TODO DON'T DEPEND ON TREEVIEW
-    //TODO restore items after resuming
+    //USING MEMORY FOR ITEMS LIST!!!!!!!!!!!!!
+    //can't restore items after resuming
+    //write name(with nameLength) + offset -> 22 bytes for 1 item
+
+    //calculate space needed for 
+    //sectorCount / 22 zakrugleno nagore = x
+    //x * 22 = y
+    //y / sectorSize = sectorsNeeded for items dictionary
+
+
+    //TODO
+    //read item list when resuming
+        //method for intializing Items when resuming -> resume -> read space -> call method
+        //add to item list after reading
 
     internal static class FileSystem
     {
@@ -19,17 +31,27 @@ namespace Kursova
         private static long _sectorSize;
         private static long _totalSize;
         private static long _bitmapSize;
+        private static long _itemListTotalSectors;
         private static readonly MyDictionary Items = new();
 
         internal static long CWDOffset { get; set; }
         internal const int NameLength = 14;
+        internal static int ItemInfoSize = NameLength + sizeof(long);
+        internal static long ItemInfoOffset;
 
         internal static void Initiate(long sectorSize, long sectorCount, bool restore)
         {
             _sectorSize = sectorSize;
             _sectorCount = sectorCount;
             _totalSize = _sectorCount * _sectorSize;
-            _bitmapSize = _sectorCount / sizeof(long);
+            _bitmapSize = _sectorCount / sizeof(long) + 1;
+
+            //for _itemListTotalSectors and ItemInfoOffset
+            var tmp1 = sectorCount / ItemInfoSize + 1;
+            var tmp2 = tmp1 * ItemInfoSize;
+            _itemListTotalSectors = tmp2 / sectorSize + 1;
+            ItemInfoOffset = (sectorCount - _itemListTotalSectors) * sectorSize + 1;
+            //End
 
             if (restore)
             {
@@ -81,6 +103,7 @@ namespace Kursova
                 ParityCheck.WriteParityBit(RootOffset, _sectorSize);
 
                 Items.Add("Root", RootOffset);
+                UpdateItemListMetadata(MyToCharArray("Root"), RootOffset);
             }
         }
 
@@ -155,6 +178,7 @@ namespace Kursova
                 ReadDirectory(GetParentOffset(writeOffset));
 
                 Items.Add(fileName, writeOffset);
+                UpdateItemListMetadata(MyToCharArray(fileName), writeOffset);
             }
         }
 
@@ -192,6 +216,7 @@ namespace Kursova
             //update the bitmap
             var writeOffset = Bitmap.FindFreeSector(Br, (int)BitmapSectors, (int)_sectorSize);
             Items.Add(dirName, writeOffset);
+            UpdateItemListMetadata(MyToCharArray(dirName), writeOffset);
 
             Stream.Position = writeOffset;
             Bw.Write(false);
@@ -389,13 +414,11 @@ namespace Kursova
                 (obj.ForeColor == MainForm.BadObjColor && Br.ReadByte() == 1))
             {
                 DeleteFile(objOffset);
-                MainForm.DeleteNode(objName);
             }
             //Directory
             else
             {
                 DeleteDirectory(objOffset);
-                MainForm.DeleteNode(objName);
             }
 
             UpdateBitmap();
@@ -428,6 +451,7 @@ namespace Kursova
             Stream.Position = fileOffset + 1 + sizeof(long);
             var fileName = MyToString(Br.ReadChars(NameLength));
             Items.Remove(fileName, fileOffset);
+            RemoveItemListInfo(fileName, fileOffset);
             MainForm.DeleteNode(fileName);
 
             //replace sectors with 0 bytes
@@ -452,6 +476,7 @@ namespace Kursova
                 Stream.Position = dirOffset + 1 + sizeof(long);
                 var dirName = MyToString(Br.ReadChars(NameLength));
                 Items.Remove(dirName, dirOffset);
+                RemoveItemListInfo(dirName, dirOffset);
                 MainForm.DeleteNode(dirName);
 
                 Stream.Position = dirOffset;
@@ -493,9 +518,13 @@ namespace Kursova
                 }
 
                 CleanParentDir(dirOffset);
+
                 Stream.Position = dirOffset + 1 + sizeof(long);
                 var dirName = MyToString(Br.ReadChars(NameLength));
+
                 Items.Remove(dirName, dirOffset);
+                RemoveItemListInfo(dirName, dirOffset);
+                MainForm.DeleteNode(dirName);
 
                 currPosition = dirOffset + 1 + NameLength;
                 while (true)
@@ -592,6 +621,7 @@ namespace Kursova
             ReadDirectory(GetParentOffset(writeOffsets[0]));
 
             Items.Add(fileName, writeOffsets[0]);
+            UpdateItemListMetadata(MyToCharArray(fileName), writeOffsets[0]);
         }
 
         private static string[] SplitString(string str, int requiredSectors)
@@ -619,7 +649,7 @@ namespace Kursova
         }
         
         private static void UpdateBitmap() =>
-            Bitmap.UpdateBitmap(new BinaryReader(Stream), (int)_sectorSize, (int)BitmapSectors, (int)_sectorCount, RootOffset);
+            Bitmap.UpdateBitmap(new BinaryReader(Stream), (int)_sectorSize, (int)BitmapSectors, (int)_itemListTotalSectors, (int)_sectorCount, RootOffset);
 
         private static string MyToString(char[] chars)
         {
@@ -649,19 +679,42 @@ namespace Kursova
             return arr;
         }
 
-        private static TreeNode GetTreeNode(MyLinkedList<TreeNode> nodes, string name)
+        private static void UpdateItemListMetadata(char[] name, long offset)
         {
-            TreeNode currNode = null;
-            foreach (TreeNode node in nodes)
+            //search for empty space
+            Stream.Position = ItemInfoOffset;
+            long currSpace = -1;
+            while (currSpace != 0)
             {
-                if (node.Text == name)
-                {
-                    currNode = node;
-                    break;
-                }
+                var bytes = Br.ReadBytes(ItemInfoSize);
+                currSpace = BitConverter.ToInt64(bytes , 0);
             }
 
-            return currNode;
+            //write info there
+            Stream.Position -= ItemInfoSize;
+            Bw.Write(name);
+            Stream.Position += NameLength - name.Length;
+            Bw.Write(offset);
+        }
+
+        private static void RemoveItemListInfo(string name, long offset)
+        {
+            Stream.Position = ItemInfoOffset;
+            long currSpace = -1;
+            while (currSpace != 0)
+            {
+                var bytes = Br.ReadBytes(ItemInfoSize);
+                currSpace = BitConverter.ToInt64(bytes , NameLength);
+                if (currSpace == offset)
+                    break;
+            }
+
+            Stream.Position -= ItemInfoSize;
+            for (var i = 0; i < NameLength; i++)
+            {
+                Bw.Write(false);
+            }
+            Bw.Write((long)0);
         }
     }
 }

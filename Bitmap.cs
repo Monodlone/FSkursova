@@ -4,14 +4,14 @@ namespace Kursova
 {
     internal static class Bitmap
     {
-        internal static void UpdateBitmap(BinaryReader br, int sectorSize, int bitmapSectors, int sectorCount, long rootOffset)
+        internal static void UpdateBitmap(BinaryReader br, int sectorSize, int bitmapSectors, int ItemListSectors, int sectorCount, long rootOffset)
         {
             BitArray bitArr = new(sectorCount);
             for (var i = 0; i < bitmapSectors; i++)
                 bitArr[i] = true;
 
             br.BaseStream.Position = rootOffset + 1;//+1 cuz dirs first byte is empty
-            for (var i = bitmapSectors; i < sectorCount; i++)
+            for (var i = bitmapSectors; i < sectorCount - ItemListSectors; i++)
             {
                 var tmp = br.ReadChar();
                 if (tmp != 0)
