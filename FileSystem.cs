@@ -50,7 +50,7 @@ namespace Kursova
             var tmp1 = sectorCount / ItemInfoSize + 1;
             var tmp2 = tmp1 * ItemInfoSize;
             _itemListTotalSectors = tmp2 / sectorSize + 1;
-            ItemInfoOffset = (sectorCount - _itemListTotalSectors) * sectorSize + 1;
+            ItemInfoOffset = (sectorCount - _itemListTotalSectors) * sectorSize;
             //End
 
             if (restore)
@@ -88,6 +88,8 @@ namespace Kursova
 
                 var rootNode = new TreeNode(rootName) { Tag = RootOffset };
                 MainForm.InitRoot(rootNode);
+
+                InitializeItemList();
             }
             else
             {
@@ -693,8 +695,12 @@ namespace Kursova
             //write info there
             Stream.Position -= ItemInfoSize;
             Bw.Write(name);
+
             Stream.Position += NameLength - name.Length;
             Bw.Write(offset);
+
+            //without this below, Bw.Write(offset); doesn't write anything
+            Stream.Position = ItemInfoOffset;
         }
 
         private static void RemoveItemListInfo(string name, long offset)
@@ -715,6 +721,24 @@ namespace Kursova
                 Bw.Write(false);
             }
             Bw.Write((long)0);
+        }
+
+        private static void InitializeItemList()
+        {
+            Stream.Position = ItemInfoOffset;
+
+            while (Stream.Position < Stream.Length)
+            {
+                var bytes = Br.ReadBytes(ItemInfoSize);
+                var currSpace = BitConverter.ToInt64(bytes , 0);
+                if (currSpace != 0)
+                {
+                    Stream.Position -= ItemInfoSize;
+                    var objName = MyToString(Br.ReadChars(NameLength));
+                    var objOffset = BitConverter.ToInt64(Br.ReadBytes(sizeof(long)) , 0);
+                    Items.Add(objName, objOffset);
+                }
+            }
         }
     }
 }
