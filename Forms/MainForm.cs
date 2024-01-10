@@ -1,18 +1,19 @@
+using System.Reflection.Metadata.Ecma335;
 using System.Text;
 
 namespace Kursova.Forms
 {
     public partial class MainForm : Form
     {
-        internal static TreeNode CWD { get; private set; }
         internal static TreeNode? FileToInteract { get; private set; }
+        internal static bool Restore { get; set; }
+        private static TreeNode CWD { get; set; }
         private static TreeNode RootNode { get; set;  }
         private static TreeNode? LastSelectedFile { get; set; }
 
-        internal static bool Restore { get; set; }
 
-        internal static readonly Color FileColor = Color.Green;
-        internal static readonly Color BadObjColor = Color.Red;
+        private static readonly Color BadObjColor = Color.Red;
+        private static readonly Color FileColor = Color.Green;
         private static readonly Color DirColor = Color.Blue;
 
         public MainForm() => InitializeComponent();
@@ -38,39 +39,65 @@ namespace Kursova.Forms
             CWD = RootNode;
         }
 
+        internal static void ChangeCWDColorToBadSectorColor() => CWD.ForeColor = BadObjColor;
+
         public static void AddTreeviewNodes(string name, long offset, bool isFile)
         {
-            var node = new TreeNode(name) { ForeColor = isFile ? FileColor : DirColor, Tag = offset, Name = name};
+            var node = new TreeNode(name) { ForeColor = isFile ? FileColor : DirColor, Tag = offset};
+            node.Name = node.Text;
             CWD.Nodes.Add(node);
         }
 
-        public static void DeleteNode(string key)
+        public static void DeleteNode(string key, bool isFile)
         {
-            var node = treeView.Nodes.Find(key, true);
-            //there is never more than one node with the same name
-            node[0].Remove();
-        } 
+            var nodes = treeView.Nodes.Find(key, true);
+            foreach (var node in nodes)
+            {
+                if (isFile && node.ForeColor == FileColor)
+                {
+                    node.Remove();
+                    return;
+                }
 
-        internal static void ChangeToRootWhenCwdBad() => CWD = RootNode;
+                if (!isFile && node.ForeColor == DirColor)
+                {
+                    node.Remove();
+                    return;
+                }
+            }
+        }
 
-        internal static void ResetParentDir(TreeNode node) => node.Nodes.Clear();
+        internal static void ChangeToRootWhenIfCwdBad()
+        {
+            if (CWD.ForeColor == BadObjColor)
+                CWD = RootNode;
+        }
+
+
+
+        internal static void ResetParentDir() => CWD.Nodes.Clear();
 
         internal static void ChangeCWDForFileEditing(TreeNode fileParent) => CWD = fileParent;
+
+        internal static long GetOffsetOfNode(TreeNode node) => (long)node.Tag;
 
         private void TreeView_AfterSelect(object sender, TreeViewEventArgs e)
         {
             var currNode = treeView.SelectedNode;
             if (currNode.ForeColor == BadObjColor)
                 return;
-            if (currNode.ForeColor == DirColor)//Red == Directory
+
+            var objOffset = GetOffsetOfNode(currNode);
+            if (FileSystem.CheckIfFile(objOffset))
+                FileToInteract = currNode;
+
+            else
             {
                 CWD = currNode;
-                FileSystem.CWDOffset = (long)CWD.Tag;
+                FileSystem.CWDOffset = objOffset;
                 LastSelectedFile = FileToInteract;
                 FileToInteract = null;
             }
-            else //if (currNode.ForeColor == fileColor)//Green == File
-                FileToInteract = currNode;
         }
 
         private static string MyGetNameWithoutExtension(string path)
@@ -121,7 +148,7 @@ namespace Kursova.Forms
             }
 
             var objActionsForm = new ObjActionsForm(true, false, true);
-            var fileInfo = FileSystem.ReadFile((long)FileToInteract.Tag);
+            var fileInfo = FileSystem.ReadFile(GetOffsetOfNode(FileToInteract));
             if (fileInfo == null)
             {
                 FileToInteract.ForeColor = BadObjColor;
@@ -148,7 +175,7 @@ namespace Kursova.Forms
             }
 
             var objActionsForm = new ObjActionsForm(true, true, false);
-            var fileInfo = FileSystem.ReadFile((long)FileToInteract.Tag);
+            var fileInfo = FileSystem.ReadFile(GetOffsetOfNode(FileToInteract));
             if (fileInfo == null)
             {
                 FileToInteract.ForeColor = BadObjColor;
@@ -170,7 +197,7 @@ namespace Kursova.Forms
 
             var svFileDialog = new SaveFileDialog();
             svFileDialog.Filter = "txt files (*.txt)|*.txt";
-            var info = FileSystem.ReadFile((long)FileToInteract.Tag);
+            var info = FileSystem.ReadFile(GetOffsetOfNode(FileToInteract));
             svFileDialog.FileName = info[0];
             if (svFileDialog.ShowDialog() == DialogResult.OK)
             {
@@ -228,7 +255,7 @@ namespace Kursova.Forms
             StartBtn.Visible = false;
         }
 
-        private void treeView_MouseMove(object sender, MouseEventArgs e)
+        private void TreeView_MouseMove(object sender, MouseEventArgs e)
         {
             //keep last selected node highlighted
             if (treeView.SelectedNode != null)
@@ -249,24 +276,7 @@ namespace Kursova.Forms
             if (LastSelectedFile == null)
                 return;
 
-            var fileOffset = (long)LastSelectedFile.Tag;
-            var parentOffset = FileSystem.GetParentOffset(fileOffset);
-
-            if (parentOffset == FileSystem.CWDOffset)
-                return;
-
-            //replace old parent offset with new one in file
-            var stream = FileSystem.GetStream();
-            stream.Position = fileOffset + 1;
-            var bw = new BinaryWriter(stream, Encoding.UTF8);
-            bw.Write(FileSystem.CWDOffset);
-            //bw.Close();
-            //stream.Close();
-            //remove file offset from old parent
-            FileSystem.RemoveOffsetFromParent(fileOffset, parentOffset);
-
-            //write file offset to new parent dir
-            FileSystem.UpdateDir(fileOffset, CWD);
+            FileSystem.MoveFile(GetOffsetOfNode(LastSelectedFile));
 
             //move node to new parent dir in tree view
             LastSelectedFile.Remove();

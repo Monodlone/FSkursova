@@ -42,7 +42,7 @@ namespace Kursova
             return true;
         }
 
-        internal static void UpdateParityBitOfCWD(long offset, long sectorSize)
+        internal static void UpdateParityBit(long offset, long sectorSize)
         {
             var stream = FileSystem.GetStream();
             stream.Position = offset + (sectorSize - 1 - sizeof(long));

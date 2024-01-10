@@ -4,25 +4,12 @@
     {
         private readonly MyLinkedList<KeyValuePair<string, long>> _items = new();
 
-        internal int Count() => _items.Count;
-
         internal void Add(string key, long value)
         {
             if (!Contains(key, value))
             {
                 _items.Add(new KeyValuePair<string, long>(key, value));
             }
-        }
-
-        internal bool Contains(string key, long value)
-        {
-            foreach (KeyValuePair<string, long> pair in _items)
-            {
-                if (pair.Key.Equals(key) && pair.Value.Equals(value))
-                    return true;
-            }
-
-            return false;
         }
 
         internal bool ContainsKey(string key)
@@ -76,6 +63,17 @@
 
             _items.Reverse();
             return -1;
+        }
+
+        private bool Contains(string key, long value)
+        {
+            foreach (KeyValuePair<string, long> pair in _items)
+            {
+                if (pair.Key.Equals(key) && pair.Value.Equals(value))
+                    return true;
+            }
+
+            return false;
         }
     }
 }

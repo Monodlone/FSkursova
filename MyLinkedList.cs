@@ -8,21 +8,6 @@ namespace Kursova
         internal Node<T> Head { get; private set; }
         private Node<T> Last { get; set; }
 
-        public void AddFirst(T value)
-        {
-            var newNode = new Node<T>(value);
-
-            if(Head == null)
-                Head = Last = newNode;
-            else
-            {
-                newNode.Next = Head;
-                Head = newNode;
-            }
-
-            Count++;
-        }
-
         public void Add(T value)
         {
             var newNode = new Node<T>(value);
@@ -66,20 +51,6 @@ namespace Kursova
                 node.Next = node.Next.Next;
                 Count--;
             }
-        }
-
-        public bool Contains(T value)
-        {
-            var node = Head;
-
-            while (node != null)
-            {
-                if (node.Value.Equals(value))
-                    return true;
-                node = node.Next;
-            }
-
-            return false;
         }
 
         public IEnumerator GetEnumerator()
