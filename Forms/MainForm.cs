@@ -1,6 +1,3 @@
-using System.Reflection.Metadata.Ecma335;
-using System.Text;
-
 namespace Kursova.Forms
 {
     public partial class MainForm : Form

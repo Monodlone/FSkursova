@@ -3,15 +3,10 @@ using Kursova.Forms;
 
 namespace Kursova
 {
-    //TODO DON'T DEPEND ON TREEVIEW
-    //USING MEMORY FOR ITEMS LIST!!!!!!!!!!!!!
-
-    //calculate space needed for 
-    //sectorCount / 22 zakrugleno nagore = x
-    //x * 22 = y
-    //y / sectorSize = sectorsNeeded for items dictionary
-
-
+    //TODO THING I CAN DO
+    //1. better resiliency -> da imam kopiq na informaciqta i kogato promenqm fajl ako go promenq celiq da smenq na kopieto kato iztochnik
+    //   inache da si ostana na originala predi promqnata. Pravi se s edin bit nakraq na celiq fail
+    //2. Deduplication -> vmesto da imam dva sektora s ednakva informaciq da imam samo edin i da cheta v dvata sluchaq ot nego. Pravi se s hash funkciq
     internal static class FileSystem
     {
         private static FileStream Stream { get; set; }
