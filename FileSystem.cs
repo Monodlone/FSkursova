@@ -588,7 +588,7 @@ namespace Kursova
             var parentOffset = GetParentOffset(objOffset);
             //read dir and search for offset and delete it
             Stream.Position = parentOffset + 1 + 8 + NameLength;
-            while (Stream.Position < objOffset + (_sectorSize - 1 - 8 - NameLength - 1 - sizeof(long)))
+            while (Stream.Position < parentOffset + (_sectorSize - 1 - 8 - NameLength - 1 - sizeof(long)))
             {
                 var currBytes = Br.ReadBytes(sizeof(long));
                 var value = BitConverter.ToInt64(currBytes , 0);
@@ -597,7 +597,10 @@ namespace Kursova
 
                 Stream.Position -= sizeof(long);
                 Bw.Write((long)0);
+                Stream.Position = parentOffset;
+                break;
             }
+
             ParityCheck.UpdateParityBit(parentOffset, _sectorSize);
         }
 
