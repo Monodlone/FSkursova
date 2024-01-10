@@ -4,7 +4,6 @@ namespace Kursova
 {
     public class MyLinkedList<T> : IEnumerable
     {
-        internal int Count { get; private set; }
         internal Node<T> Head { get; private set; }
         private Node<T> Last { get; set; }
 
@@ -18,8 +17,6 @@ namespace Kursova
                 Last.Next = newNode;
                 Last = newNode;
             }
-
-            Count++;
         }
 
         public void Remove(T value)
@@ -27,7 +24,6 @@ namespace Kursova
             if (Head != null && Head.Value.Equals(value))//remove first node
             {
                 Head = Head.Next;
-                Count--;
                 return;
             }
 
@@ -39,7 +35,6 @@ namespace Kursova
 
                 node.Next = null;
                 Last = node;
-                Count--;
                 return;
             }
 
@@ -49,7 +44,6 @@ namespace Kursova
             if (node.Next != null)
             {
                 node.Next = node.Next.Next;
-                Count--;
             }
         }
 
